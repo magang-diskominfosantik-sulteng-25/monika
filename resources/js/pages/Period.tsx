@@ -13,8 +13,6 @@ import { Label } from '../components/ui/label';
 import { Select } from '../components/ui/select';
 import { useApi, useMutation } from '../lib/api';
 
-type PageProps = { onNavigate?: (href: string) => void };
-
 type PeriodData = {
     id: number;
     frequency: string;
@@ -27,7 +25,7 @@ type PeriodData = {
     end_date: string;
 };
 
-export default function PeriodPage({ onNavigate }: PageProps) {
+export default function PeriodPage() {
     const { data: periodList, refetch } = useApi<PeriodData[]>('/periods', []);
     const { mutate: createPeriod } = useMutation<Partial<PeriodData>, PeriodData>('/periods', 'post');
     const { mutate: updatePeriod } = useMutation<Partial<PeriodData>, PeriodData>('/periods/:id', 'put');
@@ -150,9 +148,9 @@ export default function PeriodPage({ onNavigate }: PageProps) {
     };
 
     return (
-        <AppShell title="Periode" description="Daftar periode pelaporan" active="periode" onNavigate={onNavigate}>
+        <AppShell title="Periode" description="Daftar periode pelaporan" active="period">
             <div className="space-y-4">
-                <ToolbarFilter title="Filter periode" searchPlaceholder="Cari periode" >
+                <ToolbarFilter title="Filter periode">
                   <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah Periode
                     </Button>
@@ -189,7 +187,6 @@ export default function PeriodPage({ onNavigate }: PageProps) {
                         },
                     ]}
                     data={periodList || []}
-                    searchKeys={['period_key', 'label']}
                 />
             </div>
 

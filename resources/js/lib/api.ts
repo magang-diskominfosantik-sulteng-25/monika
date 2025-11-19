@@ -37,6 +37,20 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Intercept response to handle CSRF token mismatch
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // If CSRF token mismatch (419), reload page to get fresh token
+        if (error.response?.status === 419) {
+            alert('Sesi Anda telah berakhir. Halaman akan dimuat ulang.');
+            window.location.reload();
+            return Promise.reject(new Error('Session expired'));
+        }
+        return Promise.reject(error);
+    }
+);
+
 export function useApi<T>(path: string, initial?: T) {
     const [data, setData] = useState<T | undefined>(initial);
     const [loading, setLoading] = useState(false);

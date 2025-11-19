@@ -10,8 +10,6 @@ import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
 import { useApi } from '../lib/api';
 
-type PageProps = { onNavigate?: (href: string) => void };
-
 type ReportData = {
     opd: string;
     indicator: string;
@@ -33,7 +31,7 @@ type SummaryResponse = {
 
 type OpdData = { id: number; nama: string; singkatan: string };
 
-export default function LaporanPage({ onNavigate }: PageProps) {
+export default function LaporanPage() {
     const [filters, setFilters] = useState({ tahun: '2026', jenis: 'Semua', opd: 'Semua', status: 'Semua' });
     const { data: summaryData } = useApi<SummaryResponse>('/reports/summary');
     const { data: opdList } = useApi<OpdData[]>('/opds', []);
@@ -60,9 +58,9 @@ export default function LaporanPage({ onNavigate }: PageProps) {
     };
 
     return (
-        <AppShell title="Laporan" description="Bangun dan ekspor laporan" active="laporan" onNavigate={onNavigate}>
+        <AppShell title="Laporan" description="Bangun dan ekspor laporan" active="laporan">
             <div className="space-y-4">
-                <ToolbarFilter title="Builder laporan" searchPlaceholder="Cari indikator">
+                <ToolbarFilter title="Builder laporan">
                     <Select value={filters.tahun} onChange={(e) => setFilters({ ...filters, tahun: e.target.value })}>
                         <option>2026</option>
                         <option>2025</option>
@@ -109,7 +107,6 @@ export default function LaporanPage({ onNavigate }: PageProps) {
                         { key: 'status', header: 'Status' },
                     ]}
                     data={preview}
-                    searchKeys={['indicator', 'opd', 'period']}
                 />
             </div>
         </AppShell>

@@ -14,23 +14,30 @@ import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useApi, useMutation } from '../lib/api';
 
-type PageProps = { onNavigate?: (href: string) => void };
-
 type IndicatorData = {
     id: number;
     nama: string;
     jenis: string;
     indicator_type: string;
     satuan: string;
-    sumber_data: string | null;
+    opd_id: number | null;
+    opd?: { id: number; nama: string };
     frequency: string;
     keterangan: string | null;
     version: number;
     aktif: boolean;
 };
 
-export default function IndikatorPage({ onNavigate }: PageProps) {
+type OpdData = {
+    id: number;
+    nama: string;
+    singkatan: string;
+    aktif: boolean;
+};
+
+export default function IndikatorPage() {
     const { data: indikatorList, refetch } = useApi<IndicatorData[]>('/indicators', []);
+    const { data: opdList } = useApi<OpdData[]>('/opds', []);
     const { mutate: createIndicator } = useMutation<Partial<IndicatorData>, IndicatorData>('/indicators', 'post');
     const { mutate: updateIndicator } = useMutation<Partial<IndicatorData>, IndicatorData>('/indicators/:id', 'put');
     const { mutate: deleteIndicator } = useMutation('/indicators/:id', 'delete');
@@ -44,7 +51,7 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
         jenis: 'IKU' as 'IKU' | 'IKD' | 'IKK',
         indicator_type: 'numeric' as 'numeric' | 'percent' | 'index' | 'text',
         satuan: '',
-        sumber_data: '',
+        opd_id: 0,
         frequency: 'annual' as 'annual' | 'semester' | 'quarter' | 'month',
         keterangan: '',
         version: 1,
@@ -56,6 +63,10 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
             toast.error('Nama dan satuan wajib diisi');
             return;
         }
+        if (!form.opd_id || form.opd_id === 0) {
+            toast.error('Sumber Data (OPD) wajib dipilih');
+            return;
+        }
         try {
             await createIndicator(form);
             setForm({
@@ -63,7 +74,7 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
                 jenis: 'IKU',
                 indicator_type: 'numeric',
                 satuan: '',
-                sumber_data: '',
+                opd_id: 0,
                 frequency: 'annual',
                 keterangan: '',
                 version: 1,
@@ -73,8 +84,25 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
             toast.success('Indikator berhasil ditambahkan');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menambahkan indikator');
+            const err = error as {
+                response?: {
+                    data?: {
+                        message?: string;
+                        errors?: Record<string, string[]>;
+                    };
+                };
+                message?: string;
+            };
+            console.log('Error detail:', err.response?.data);
+
+            // Show validation errors if available
+            if (err.response?.data?.errors) {
+                const errors = err.response.data.errors;
+                const firstError = Object.values(errors)[0]?.[0];
+                toast.error(firstError || 'Gagal menambahkan indikator');
+            } else {
+                toast.error(err.response?.data?.message || 'Gagal menambahkan indikator');
+            }
         }
     };
 
@@ -85,7 +113,7 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
             jenis: indicator.jenis as 'IKU' | 'IKD' | 'IKK',
             indicator_type: indicator.indicator_type as 'numeric' | 'percent' | 'index' | 'text',
             satuan: indicator.satuan,
-            sumber_data: indicator.sumber_data || '',
+            opd_id: indicator.opd_id || 0,
             frequency: indicator.frequency as 'annual' | 'semester' | 'quarter' | 'month',
             keterangan: indicator.keterangan || '',
             version: indicator.version || 1,
@@ -100,6 +128,10 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
             toast.error('Nama dan satuan wajib diisi');
             return;
         }
+        if (!form.opd_id || form.opd_id === 0) {
+            toast.error('Sumber Data (OPD) wajib dipilih');
+            return;
+        }
         try {
             await updateIndicator(form, `/indicators/${selectedIndicator.id}`);
             setShowEditModal(false);
@@ -107,8 +139,25 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
             toast.success('Indikator berhasil diperbarui');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal memperbarui indikator');
+            const err = error as {
+                response?: {
+                    data?: {
+                        message?: string;
+                        errors?: Record<string, string[]>;
+                    };
+                };
+                message?: string;
+            };
+            console.log('Error detail:', err.response?.data);
+
+            // Show validation errors if available
+            if (err.response?.data?.errors) {
+                const errors = err.response.data.errors;
+                const firstError = Object.values(errors)[0]?.[0];
+                toast.error(firstError || 'Gagal memperbarui indikator');
+            } else {
+                toast.error(err.response?.data?.message || 'Gagal memperbarui indikator');
+            }
         }
     };
 
@@ -132,9 +181,9 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
     };
 
     return (
-        <AppShell title="Indikator" description="Kelola IKU/IKD/IKK" active="indikator" onNavigate={onNavigate}>
+        <AppShell title="Indikator" description="Kelola IKU/IKD/IKK" active="indikator">
             <div className="space-y-4">
-                <ToolbarFilter title="Filter indikator" searchPlaceholder="Cari indikator">
+                <ToolbarFilter title="Filter indikator">
                     <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah Indikator
                     </Button>
@@ -182,7 +231,6 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
                         },
                     ]}
                     data={indikatorList || []}
-                    searchKeys={['nama', 'jenis']}
                 />
             </div>
 
@@ -244,12 +292,17 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Sumber Data</Label>
-                            <Input
-                                placeholder="Sumber data indikator"
-                                value={form.sumber_data}
-                                onChange={(e) => setForm({ ...form, sumber_data: e.target.value })}
-                            />
+                            <Label>Sumber Data (OPD) *</Label>
+                            <Select value={form.opd_id} onChange={(e) => setForm({ ...form, opd_id: Number(e.target.value) })}>
+                                <option value="0">Pilih OPD</option>
+                                {(opdList || [])
+                                    .filter((opd) => opd.aktif)
+                                    .map((opd) => (
+                                        <option key={opd.id} value={opd.id}>
+                                            {opd.nama}
+                                        </option>
+                                    ))}
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label>Keterangan</Label>
@@ -334,12 +387,17 @@ export default function IndikatorPage({ onNavigate }: PageProps) {
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Sumber Data</Label>
-                            <Input
-                                placeholder="Sumber data indikator"
-                                value={form.sumber_data}
-                                onChange={(e) => setForm({ ...form, sumber_data: e.target.value })}
-                            />
+                            <Label>Sumber Data (OPD) *</Label>
+                            <Select value={form.opd_id} onChange={(e) => setForm({ ...form, opd_id: Number(e.target.value) })}>
+                                <option value="0">Pilih OPD</option>
+                                {(opdList || [])
+                                    .filter((opd) => opd.aktif)
+                                    .map((opd) => (
+                                        <option key={opd.id} value={opd.id}>
+                                            {opd.nama}
+                                        </option>
+                                    ))}
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label>Keterangan</Label>

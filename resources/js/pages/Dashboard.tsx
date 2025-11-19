@@ -24,9 +24,7 @@ const heatmapCells = Array.from({ length: 12 }, (_, idx) => ({
     value: Math.round(Math.random() * 100),
 }));
 
-type PageProps = { onNavigate?: (href: string) => void };
-
-export default function Dashboard({ onNavigate }: PageProps) {
+export default function Dashboard() {
     const { data: achievements, loading: loadingAchievements } = useApi<AchievementData[]>('/achievements', []);
     const { data: indicators, loading: loadingIndicators } = useApi<IndicatorData[]>('/indicators', []);
     const { data: targets, loading: loadingTargets } = useApi<TargetData[]>('/targets', []);
@@ -55,12 +53,7 @@ export default function Dashboard({ onNavigate }: PageProps) {
     ];
 
     return (
-        <AppShell
-            title="Dashboard"
-            description="Ringkasan progres indikator kinerja Diskominfo Prov. Sulawesi Tengah"
-            active="dashboard"
-            onNavigate={onNavigate}
-        >
+        <AppShell title="Dashboard" description="Ringkasan progres indikator kinerja Diskominfo Prov. Sulawesi Tengah" active="dashboard">
             <div className="space-y-6">
                 <div className="grid gap-4 lg:grid-cols-4">
                     {loading
@@ -98,7 +91,6 @@ export default function Dashboard({ onNavigate }: PageProps) {
                                 },
                             ]}
                             data={drafts}
-                            searchKeys={['indikator', 'opd', 'periode']}
                         />
                     </div>
                     <div className="space-y-3">

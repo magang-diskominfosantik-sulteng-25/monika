@@ -16,6 +16,7 @@ class IndicatorController extends Controller
     public function index(Request $request)
     {
         $query = IndicatorMaster::query()
+            ->with('opd:id,nama')
             ->when($request->filled('jenis'), function ($q) use ($request) {
                 $jenis = Arr::wrap($request->input('jenis'));
                 $jenis = array_map(fn ($value) => strtoupper((string) $value), $jenis);
@@ -43,15 +44,14 @@ class IndicatorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kode' => ['required', 'string', 'max:50', 'unique:indicator_masters,kode'],
             'nama' => ['required', 'string', 'max:500'],
             'jenis' => ['required', 'in:IKU,IKD,IKK'],
             'indicator_type' => ['required', 'in:numeric,percent,index,text'],
             'satuan' => ['required', 'string', 'max:100'],
-            'sumber_data' => ['nullable', 'string', 'max:255'],
+            'opd_id' => ['required', 'integer', 'exists:opds,id'],
             'frequency' => ['required', 'in:annual,semester,quarter,month'],
             'keterangan' => ['nullable', 'string'],
-            'version' => ['nullable', 'string', 'max:50'],
+            'version' => ['nullable', 'integer'],
             'aktif' => ['boolean'],
         ]);
 
@@ -68,15 +68,14 @@ class IndicatorController extends Controller
     public function update(Request $request, IndicatorMaster $indicator)
     {
         $validated = $request->validate([
-            'kode' => ['sometimes', 'required', 'string', 'max:50', 'unique:indicator_masters,kode,'.$indicator->id],
             'nama' => ['sometimes', 'required', 'string', 'max:500'],
             'jenis' => ['sometimes', 'required', 'in:IKU,IKD,IKK'],
             'indicator_type' => ['sometimes', 'required', 'in:numeric,percent,index,text'],
             'satuan' => ['sometimes', 'required', 'string', 'max:100'],
-            'sumber_data' => ['nullable', 'string', 'max:255'],
+            'opd_id' => ['required', 'integer', 'exists:opds,id'],
             'frequency' => ['sometimes', 'required', 'in:annual,semester,quarter,month'],
             'keterangan' => ['nullable', 'string'],
-            'version' => ['nullable', 'string', 'max:50'],
+            'version' => ['nullable', 'integer'],
             'aktif' => ['boolean'],
         ]);
 

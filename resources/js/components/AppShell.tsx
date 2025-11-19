@@ -1,16 +1,21 @@
-import { Menu, ShieldCheck, UploadCloud } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { LogOut, Menu, UploadCloud } from 'lucide-react';
 import { useState } from 'react';
 
 import { cn } from '../lib/utils';
 
-const navItems = [
-    { label: 'Dashboard', href: 'dashboard' },
-    { label: 'Indikator', href: 'indikator' },
-    { label: 'Periode', href: 'periode' },
-    { label: 'Entri Data', href: 'entri' },
-    { label: 'OPD', href: 'opd' },
-    { label: 'Laporan', href: 'laporan' },
-    { label: 'Audit Log', href: 'audit' },
+type NavItem = { label: string; href: string; key: string };
+
+const navItems: NavItem[] = [
+    { label: 'Dashboard', href: '/dashboard', key: 'dashboard' },
+    { label: 'Indikator', href: '/indikator', key: 'indikator' },
+    { label: 'Periode', href: '/period', key: 'period' },
+    { label: 'Target', href: '/target', key: 'target' },
+    { label: 'Capaian', href: '/capaian', key: 'capaian' },
+    { label: 'OPD', href: '/opd', key: 'opd' },
+    { label: 'Laporan', href: '/laporan', key: 'laporan' },
+    { label: 'Audit Log', href: '/audit-log', key: 'audit-log' },
+    { label: 'Kelola Akun', href: '/users', key: 'users' },
 ];
 
 interface AppShellProps {
@@ -18,11 +23,14 @@ interface AppShellProps {
     title: string;
     description?: string;
     active: string;
-    onNavigate?: (href: string) => void;
 }
 
-export function AppShell({ children, title, description, active, onNavigate }: AppShellProps) {
+export function AppShell({ children, title, description, active }: AppShellProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { url, props } = usePage<{ auth: { user: { name: string; email: string } } }>();
+    const normalizedUrl = url.split('?')[0];
+    const user = props.auth.user;
+
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900">
             <div className="mx-auto flex min-h-full gap-6 px-6 py-6 lg:grid lg:grid-cols-[280px_1fr] lg:items-start lg:px-12">
@@ -34,9 +42,7 @@ export function AppShell({ children, title, description, active, onNavigate }: A
                     )}
                 >
                     <div className="flex items-center gap-3 border-b border-slate-200 px-6 py-5">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
-                            <ShieldCheck className="h-6 w-6" />
-                        </div>
+                            <img src="/logo-pemprov-sulteng.png" alt="Monika Logo" className="h-12 w-12" />
                         <div>
                             <p className="text-xs font-semibold tracking-wide text-blue-700 uppercase">Monika</p>
                             <p className="text-sm font-medium text-slate-800">Monitoring Indikator & Capaian</p>
@@ -44,18 +50,21 @@ export function AppShell({ children, title, description, active, onNavigate }: A
                     </div>
                     <div className="p-4">
                         <nav className="space-y-1">
-                            {navItems.map((item) => (
-                                <button
-                                    key={item.href}
-                                    className={cn(
-                                        'flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-500',
-                                        active === item.href && 'bg-blue-50 text-blue-700 shadow-inner',
-                                    )}
-                                    onClick={() => onNavigate?.(item.href)}
-                                >
-                                    <span>{item.label}</span>
-                                </button>
-                            ))}
+                            {navItems.map((item) => {
+                                const isActive = active === item.key || normalizedUrl === item.href;
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={cn(
+                                            'flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-500',
+                                            isActive && 'bg-blue-50 text-blue-700 shadow-inner',
+                                        )}
+                                    >
+                                        <span>{item.label}</span>
+                                    </Link>
+                                );
+                            })}
                         </nav>
                         <div className="mt-6 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-4 text-white">
                             <div className="flex items-start justify-between">
@@ -92,10 +101,19 @@ export function AppShell({ children, title, description, active, onNavigate }: A
                             <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm lg:flex">
                                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700" aria-hidden />
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-900">Operator</p>
-                                    <p className="text-xs text-slate-500">Diskominfo Prov. Sulteng</p>
+                                    <p className="text-sm font-semibold text-slate-900">{user.name}</p>
+                                    <p className="text-xs text-slate-500">{user.email}</p>
                                 </div>
                             </div>
+                            <Link
+                                href="/logout"
+                                method="post"
+                                as="button"
+                                className="rounded-full bg-white px-4 py-2 text-xs font-semibold shadow-sm transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                            >
+                                <LogOut className="mr-2 inline-block h-4 w-4" aria-hidden />
+                                Keluar
+                            </Link>
                         </div>
                     </header>
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:p-7">{children}</div>

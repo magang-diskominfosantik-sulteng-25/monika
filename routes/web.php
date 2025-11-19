@@ -1,47 +1,62 @@
 <?php
 
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+Route::redirect('/', '/login');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+});
 
-// OPD
-Route::get('/opd', function () {
-    return Inertia::render('OPD');
-})->name('opd');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
 
-// Indikator
-Route::get('/indikator', function () {
-    return Inertia::render('Indikator');
-})->name('indikator');
+    // OPD
+    Route::get('/opd', function () {
+        return Inertia::render('OPD');
+    })->name('opd');
 
-// Period
-Route::get('/period', function () {
-    return Inertia::render('Period');
-})->name('period');
+    // Indikator
+    Route::get('/indikator', function () {
+        return Inertia::render('Indikator');
+    })->name('indikator');
 
-// Target
-Route::get('/target', function () {
-    return Inertia::render('Target');
-})->name('target');
+    // Period
+    Route::get('/period', function () {
+        return Inertia::render('Period');
+    })->name('period');
 
-// Capaian
-Route::get('/capaian', function () {
-    return Inertia::render('Capaian');
-})->name('capaian');
+    // Target
+    Route::get('/target', function () {
+        return Inertia::render('Target');
+    })->name('target');
 
-// Laporan
-Route::get('/laporan', function () {
-    return Inertia::render('Laporan');
-})->name('laporan');
+    // Capaian
+    Route::get('/capaian', function () {
+        return Inertia::render('Capaian');
+    })->name('capaian');
 
-// Audit Log
-Route::get('/audit-log', function () {
-    return Inertia::render('AuditLog');
-})->name('audit-log');
+    // Laporan
+    Route::get('/laporan', function () {
+        return Inertia::render('Laporan');
+    })->name('laporan');
+
+    // Audit Log
+    Route::get('/audit-log', function () {
+        return Inertia::render('AuditLog');
+    })->name('audit-log');
+
+    // Users
+    Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+});

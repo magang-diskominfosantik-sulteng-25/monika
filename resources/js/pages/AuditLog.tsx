@@ -1,10 +1,7 @@
 import { AppShell } from '../components/AppShell';
 import { DataTable } from '../components/DataTable';
-import { ToolbarFilter } from '../components/ToolbarFilter';
 import { Badge } from '../components/ui/badge';
 import { useApi } from '../lib/api';
-
-type PageProps = { onNavigate?: (href: string) => void };
 
 type AuditLogData = {
     id: number;
@@ -23,7 +20,7 @@ type AuditLogData = {
     };
 };
 
-export default function AuditLogPage({ onNavigate }: PageProps) {
+export default function AuditLogPage() {
     const { data: auditLogs } = useApi<AuditLogData[]>('/audit-logs', []);
 
     const getActionBadge = (action: string) => {
@@ -40,9 +37,8 @@ export default function AuditLogPage({ onNavigate }: PageProps) {
     };
 
     return (
-        <AppShell title="Audit Log" description="Jejak aktivitas sistem" active="audit" onNavigate={onNavigate}>
+        <AppShell title="Audit Log" description="Jejak aktivitas sistem" active="audit-log">
             <div className="space-y-4">
-                <ToolbarFilter title="Filter audit log" searchPlaceholder="Cari log" />
                 <DataTable
                     columns={[
                         {
@@ -66,7 +62,6 @@ export default function AuditLogPage({ onNavigate }: PageProps) {
                         { key: 'reason', header: 'Alasan' },
                     ]}
                     data={auditLogs || []}
-                    searchKeys={['entity', 'action']}
                 />
             </div>
         </AppShell>

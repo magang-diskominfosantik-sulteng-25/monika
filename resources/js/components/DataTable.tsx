@@ -15,29 +15,16 @@ export interface Column<T extends Record<string, unknown>> {
 interface DataTableProps<T extends Record<string, unknown>> {
     columns: Column<T>[];
     data: T[];
-    searchKeys?: (keyof T)[];
-    toolbar?: React.ReactNode;
     pageSize?: number;
 }
 
-export function DataTable<T extends Record<string, unknown>>({ columns, data, searchKeys = [], pageSize = 8 }: DataTableProps<T>) {
-    const [search] = useState('');
+export function DataTable<T extends Record<string, unknown>>({ columns, data, pageSize = 8 }: DataTableProps<T>) {
     const [sortKey, setSortKey] = useState<keyof T | null>(null);
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [page, setPage] = useState(1);
 
     const filtered = useMemo(() => {
-        const searchLower = search.toLowerCase();
-        let items = [...data];
-        if (searchLower && searchKeys.length) {
-            items = items.filter((row) =>
-                searchKeys.some((key) =>
-                    String(row[key] ?? '')
-                        .toLowerCase()
-                        .includes(searchLower),
-                ),
-            );
-        }
+        const items = [...data];
         if (sortKey) {
             items.sort((a, b) => {
                 const aVal = a[sortKey];
@@ -47,7 +34,7 @@ export function DataTable<T extends Record<string, unknown>>({ columns, data, se
             });
         }
         return items;
-    }, [data, search, searchKeys, sortDir, sortKey]);
+    }, [data, sortDir, sortKey]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const paged = filtered.slice((page - 1) * pageSize, page * pageSize);

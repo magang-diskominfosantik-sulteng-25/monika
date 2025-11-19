@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class IndicatorMaster extends Model
 {
@@ -20,6 +21,12 @@ class IndicatorMaster extends Model
         'aktif'   => 'boolean',
         'version' => 'integer',
     ];
+
+    /** @return BelongsTo<Opd, IndicatorMaster> */
+    public function opd(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class);
+    }
 
     /** @return HasMany<Target> */
     public function targets(): HasMany

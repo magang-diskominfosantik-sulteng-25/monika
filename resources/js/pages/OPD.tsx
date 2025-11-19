@@ -13,8 +13,6 @@ import { Label } from '../components/ui/label';
 import { Select } from '../components/ui/select';
 import { useApi, useMutation } from '../lib/api';
 
-type PageProps = { onNavigate?: (href: string) => void };
-
 type OpdData = {
     id: number;
     nama: string;
@@ -24,7 +22,7 @@ type OpdData = {
     aktif: boolean;
 };
 
-export default function OPDPage({ onNavigate }: PageProps) {
+export default function OPDPage() {
     const { data: opd, refetch } = useApi<OpdData[]>('/opds', []);
     const { mutate: createOpd } = useMutation<Partial<OpdData>, OpdData>('/opds', 'post');
     const { mutate: updateOpd } = useMutation<Partial<OpdData>, OpdData>('/opds/:id', 'put');
@@ -104,9 +102,9 @@ export default function OPDPage({ onNavigate }: PageProps) {
     };
 
     return (
-        <AppShell title="OPD" description="Kelola instansi" active="opd" onNavigate={onNavigate}>
+        <AppShell title="OPD" description="Kelola instansi" active="opd">
             <div className="space-y-4">
-                <ToolbarFilter title="Daftar OPD" searchPlaceholder="Cari OPD">
+                <ToolbarFilter title="Daftar OPD">
                     <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah OPD
                     </Button>
@@ -139,7 +137,6 @@ export default function OPDPage({ onNavigate }: PageProps) {
                         },
                     ]}
                     data={opd || []}
-                    searchKeys={['nama', 'singkatan', 'kontak_nama']}
                 />
             </div>
 

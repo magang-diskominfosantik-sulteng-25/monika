@@ -13,8 +13,6 @@ import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useApi, useMutation } from '../lib/api';
 
-type PageProps = { onNavigate?: (href: string) => void };
-
 type TargetData = {
     id: number;
     indicator_id: number;
@@ -48,7 +46,7 @@ type IndicatorData = {
 };
 type PeriodData = { id: number; period_key: string; label: string; tahun: number };
 
-export default function TargetPage({ onNavigate }: PageProps) {
+export default function TargetPage() {
     const { data: targets, refetch } = useApi<TargetData[]>('/targets', []);
     const { data: opdList } = useApi<OpdData[]>('/opds', []);
     const { data: indikatorList } = useApi<IndicatorData[]>('/indicators', []);
@@ -160,9 +158,9 @@ export default function TargetPage({ onNavigate }: PageProps) {
     }));
 
     return (
-        <AppShell title="Target" description="Kelola target capaian" active="entri" onNavigate={onNavigate}>
+        <AppShell title="Target" description="Kelola target capaian" active="target">
             <div className="space-y-4">
-                <ToolbarFilter title="Target indikator" searchPlaceholder="Cari target">
+                <ToolbarFilter title="Target indikator">
                     <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah Target
                     </Button>
@@ -214,7 +212,6 @@ export default function TargetPage({ onNavigate }: PageProps) {
                         },
                     ]}
                     data={enriched}
-                    searchKeys={['indikator', 'opd', 'periode']}
                 />
             </div>
 

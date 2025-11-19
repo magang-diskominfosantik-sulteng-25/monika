@@ -14,8 +14,6 @@ import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useApi, useMutation } from '../lib/api';
 
-type PageProps = { onNavigate?: (href: string) => void };
-
 type AchievementData = {
     id: number;
     indicator_id: number;
@@ -51,7 +49,7 @@ type IndicatorData = {
 };
 type PeriodData = { id: number; period_key: string; label: string; tahun: number };
 
-export default function CapaianPage({ onNavigate }: PageProps) {
+export default function CapaianPage() {
     const { data: achievements, refetch } = useApi<AchievementData[]>('/achievements', []);
     const { data: opdList } = useApi<OpdData[]>('/opds', []);
     const { data: indikatorList } = useApi<IndicatorData[]>('/indicators', []);
@@ -174,9 +172,9 @@ export default function CapaianPage({ onNavigate }: PageProps) {
     }));
 
     return (
-        <AppShell title="Capaian" description="Input capaian dan kelola evidensi" active="entri" onNavigate={onNavigate}>
+        <AppShell title="Capaian" description="Input capaian dan kelola evidensi" active="capaian">
             <div className="space-y-4">
-                <ToolbarFilter title="Daftar capaian" searchPlaceholder="Cari capaian">
+                <ToolbarFilter title="Daftar capaian" >
                     <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah Capaian
                     </Button>
@@ -251,7 +249,6 @@ export default function CapaianPage({ onNavigate }: PageProps) {
                         { key: 'catatan', header: 'Catatan' },
                     ]}
                     data={enriched}
-                    searchKeys={['indikator', 'opd', 'periode']}
                 />
             </div>
 

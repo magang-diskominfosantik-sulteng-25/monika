@@ -14,13 +14,16 @@ class IndicatorResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'              => $this->id,
-            'kode'            => $this->kode,
+            'id' => $this->id,
             'nama'            => $this->nama,
             'jenis'           => $this->jenis,
             'indicator_type'  => $this->indicator_type,
             'satuan'          => $this->satuan,
-            'sumber_data'     => $this->sumber_data,
+            'opd_id' => $this->opd_id,
+            'opd' => $this->whenLoaded('opd', fn () => [
+                'id' => $this->opd->id,
+                'nama' => $this->opd->nama,
+            ]),
             'frequency'       => $this->frequency,
             'keterangan'      => $this->keterangan,
             'version'         => $this->version,
