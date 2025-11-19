@@ -13,11 +13,11 @@ use Illuminate\Support\Facades\Route;
 // OPD
 Route::apiResource('opds', OpdController::class);
 
-// Indicators (read-only)
-Route::apiResource('indicators', IndicatorController::class)->only(['index', 'show']);
+// Indicators (full CRUD)
+Route::apiResource('indicators', IndicatorController::class);
 
-// Periods (read-only)
-Route::apiResource('periods', PeriodController::class)->only(['index', 'show']);
+// Periods (full CRUD)
+Route::apiResource('periods', PeriodController::class);
 
 // Targets
 Route::apiResource('targets', TargetController::class);

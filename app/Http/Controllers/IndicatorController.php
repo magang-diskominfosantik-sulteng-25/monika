@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RecordsAudit;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IndicatorResource;
 use App\Models\IndicatorMaster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 
 class IndicatorController extends Controller
 {
+    use RecordsAudit;
     public function index(Request $request)
     {
         $query = IndicatorMaster::query()
@@ -35,5 +38,61 @@ class IndicatorController extends Controller
     public function show(IndicatorMaster $indicator)
     {
         return new IndicatorResource($indicator);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'kode' => ['required', 'string', 'max:50', 'unique:indicator_masters,kode'],
+            'nama' => ['required', 'string', 'max:500'],
+            'jenis' => ['required', 'in:IKU,IKD,IKK'],
+            'indicator_type' => ['required', 'in:numeric,percent,index,text'],
+            'satuan' => ['required', 'string', 'max:100'],
+            'sumber_data' => ['nullable', 'string', 'max:255'],
+            'frequency' => ['required', 'in:annual,semester,quarter,month'],
+            'keterangan' => ['nullable', 'string'],
+            'version' => ['nullable', 'string', 'max:50'],
+            'aktif' => ['boolean'],
+        ]);
+
+        $indicator = IndicatorMaster::create([
+            ...$validated,
+            'aktif' => $validated['aktif'] ?? true,
+        ]);
+
+        $this->recordAudit('create', 'indicator_masters', $indicator->id, null, $indicator->toArray());
+
+        return (new IndicatorResource($indicator))->response()->setStatusCode(201);
+    }
+
+    public function update(Request $request, IndicatorMaster $indicator)
+    {
+        $validated = $request->validate([
+            'kode' => ['sometimes', 'required', 'string', 'max:50', 'unique:indicator_masters,kode,'.$indicator->id],
+            'nama' => ['sometimes', 'required', 'string', 'max:500'],
+            'jenis' => ['sometimes', 'required', 'in:IKU,IKD,IKK'],
+            'indicator_type' => ['sometimes', 'required', 'in:numeric,percent,index,text'],
+            'satuan' => ['sometimes', 'required', 'string', 'max:100'],
+            'sumber_data' => ['nullable', 'string', 'max:255'],
+            'frequency' => ['sometimes', 'required', 'in:annual,semester,quarter,month'],
+            'keterangan' => ['nullable', 'string'],
+            'version' => ['nullable', 'string', 'max:50'],
+            'aktif' => ['boolean'],
+        ]);
+
+        $before = $indicator->toArray();
+        $indicator->update($validated);
+        $this->recordAudit('update', 'indicator_masters', $indicator->id, $before, $indicator->toArray());
+
+        return new IndicatorResource($indicator);
+    }
+
+    public function destroy(IndicatorMaster $indicator)
+    {
+        $before = $indicator->toArray();
+        $indicator->delete();
+        $this->recordAudit('delete', 'indicator_masters', $indicator->id, $before, null);
+
+        return response()->json(['deleted' => true]);
     }
 }
