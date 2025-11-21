@@ -17,21 +17,14 @@ return new class extends Migration {
             $table->text('nilai_realisasi_text')->nullable();
 
             $table->text('catatan')->nullable();
-            $table->enum('status', ['draft','valid','locked'])->default('draft');
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->foreignId('validated_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('validated_at')->nullable();
-
-            $table->foreignId('locked_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('locked_at')->nullable();
-
             $table->timestamps();
 
             $table->unique(['indicator_id', 'opd_id', 'period_id'], 'achievements_unique_triplet');
-            $table->index(['status', 'opd_id', 'period_id']);
+            $table->index(['opd_id', 'period_id']);
         });
     }
 

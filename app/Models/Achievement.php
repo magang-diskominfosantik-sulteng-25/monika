@@ -14,14 +14,10 @@ class Achievement extends Model
 {
     use HasFactory;
 
-    public const STATUS = ['draft','valid','locked'];
-
     protected $table = 'achievements';
     protected $guarded = ['id'];
     protected $casts = [
         'nilai_realisasi_num' => 'decimal:4',
-        'validated_at' => 'datetime',
-        'locked_at'    => 'datetime',
     ];
 
     /** @return BelongsTo<IndicatorMaster, Achievement> */
@@ -54,31 +50,13 @@ class Achievement extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    /** @return BelongsTo<User, Achievement> */
-    public function validator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'validated_by');
-    }
-
-    /** @return BelongsTo<User, Achievement> */
-    public function locker(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'locked_by');
-    }
-
     /** @return HasMany<Evidence> */
     public function evidences(): HasMany
     {
         return $this->hasMany(Evidence::class);
     }
 
-    /* Helpers */
-    public function isDraft(): bool  { return $this->status === 'draft'; }
-    public function isValid(): bool  { return $this->status === 'valid'; }
-    public function isLocked(): bool { return $this->status === 'locked'; }
-
     /* Scopes */
-    public function scopeStatus($q, string $status) { return $q->where('status', $status); }
     public function scopeFor($q, int $indicatorId, int $opdId, int $periodId)
     {
         return $q->where([

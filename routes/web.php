@@ -27,20 +27,15 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Indikator');
     })->name('indikator');
 
+    // Integrasi OPD Indikator
+    Route::get('/opd-indikator', function () {
+        return Inertia::render('OpdIndikator');
+    })->name('opd-indikator');
+
     // Period
     Route::get('/period', function () {
         return Inertia::render('Period');
     })->name('period');
-
-    // Target
-    Route::get('/target', function () {
-        return Inertia::render('Target');
-    })->name('target');
-
-    // Capaian
-    Route::get('/capaian', function () {
-        return Inertia::render('Capaian');
-    })->name('capaian');
 
     // Laporan
     Route::get('/laporan', function () {

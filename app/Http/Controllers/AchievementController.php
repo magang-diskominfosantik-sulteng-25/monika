@@ -4,15 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\RecordsAudit;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Achievement\LockAchievementRequest;
 use App\Http\Requests\Achievement\StoreAchievementRequest;
-use App\Http\Requests\Achievement\UnlockAchievementRequest;
 use App\Http\Requests\Achievement\UpdateAchievementRequest;
-use App\Http\Requests\Achievement\ValidateAchievementRequest;
 use App\Http\Resources\AchievementResource;
 use App\Models\Achievement;
 use App\Models\IndicatorMaster;
-use App\Services\AchievementStatusService;
 use App\Services\IndicatorValueService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,14 +20,12 @@ class AchievementController extends Controller
 
     public function __construct(
         private readonly IndicatorValueService $valueService,
-        private readonly AchievementStatusService $statusService,
     ) {}
 
     public function index(Request $request)
     {
         $query = Achievement::query()
             ->with(['indicator', 'opd', 'period'])
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('indicator_id'), fn ($q) => $q->where('indicator_id', $request->integer('indicator_id')))
             ->when($request->filled('opd_id'), fn ($q) => $q->where('opd_id', $request->integer('opd_id')))
             ->when($request->filled('period_id'), fn ($q) => $q->where('period_id', $request->integer('period_id')))
@@ -59,8 +53,7 @@ class AchievementController extends Controller
             'period_id'            => $validated['period_id'],
             'nilai_realisasi_num'  => $split['num'],
             'nilai_realisasi_text' => $split['text'],
-            'catatan'              => $validated['catatan'] ?? null,
-            'status'               => 'draft',
+            'catatan' => $validated['catatan'] ?? null,
             'created_by'           => Auth::id(),
         ]);
 
@@ -129,46 +122,5 @@ class AchievementController extends Controller
         $this->recordAudit('delete', 'achievements', $achievement->id, $before, null);
 
         return response()->json(['deleted' => true]);
-    }
-
-    public function validateAction(ValidateAchievementRequest $request, Achievement $achievement)
-    {
-        $before = $achievement->toArray();
-        $reason = $request->input('catatan');
-        $achievement = $this->statusService->validate($achievement, $reason);
-        $this->recordAudit('validate', 'achievements', $achievement->id, $before, $achievement->toArray(), $reason);
-
-        $achievement->load(['indicator', 'opd', 'period']);
-        Achievement::hydrateTargets([$achievement]);
-
-        return new AchievementResource($achievement);
-    }
-
-    public function lockAction(LockAchievementRequest $request, Achievement $achievement)
-    {
-        $before = $achievement->toArray();
-        $reason = $request->input('alasan');
-        $this->authorize('lock', $achievement);
-        $achievement = $this->statusService->lock($achievement, $reason);
-        $this->recordAudit('lock', 'achievements', $achievement->id, $before, $achievement->toArray(), $reason);
-
-        $achievement->load(['indicator', 'opd', 'period']);
-        Achievement::hydrateTargets([$achievement]);
-
-        return new AchievementResource($achievement);
-    }
-
-    public function unlockAction(UnlockAchievementRequest $request, Achievement $achievement)
-    {
-        $before = $achievement->toArray();
-        $reason = $request->string('alasan');
-        $this->authorize('unlock', $achievement);
-        $achievement = $this->statusService->unlock($achievement, $reason);
-        $this->recordAudit('unlock', 'achievements', $achievement->id, $before, $achievement->toArray(), (string) $reason);
-
-        $achievement->load(['indicator', 'opd', 'period']);
-        Achievement::hydrateTargets([$achievement]);
-
-        return new AchievementResource($achievement);
     }
 }

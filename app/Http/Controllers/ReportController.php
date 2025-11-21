@@ -6,6 +6,7 @@ use App\Exports\AchievementSummaryExport;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EvidenceResource;
 use App\Models\Achievement;
+use App\Models\Target;
 use App\Models\Evidence;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +16,14 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+    public function options()
+    {
+        return response()->json([
+            'years' => \App\Models\Period::distinct()->orderByDesc('tahun')->pluck('tahun'),
+            'types' => \App\Models\IndicatorMaster::JENIS,
+        ]);
+    }
+
     public function summary(Request $request)
     {
         $dataset = $this->buildSummaryDataset($request);
@@ -24,8 +33,8 @@ class ReportController extends Controller
 
     public function matrix(Request $request)
     {
-        $records = $this->baseQuery($request)->get();
-        Achievement::hydrateTargets($records);
+        $records = $this->baseTargetQuery($request)->get();
+        $this->hydrateAchievements($records);
 
         $matrix = $records->groupBy('opd_id')->map(function (Collection $items) {
             $opd = $items->first()->opd;
@@ -33,12 +42,11 @@ class ReportController extends Controller
             $indicators = $items->groupBy('indicator_id')->map(function (Collection $indicatorItems) {
                 $indicator = $indicatorItems->first()->indicator;
 
-                $periods = $indicatorItems->map(function (Achievement $achievement) {
+                $periods = $indicatorItems->map(function (Target $target) {
                     return [
-                        'period' => $achievement->period->period_key,
-                        'status' => $achievement->status,
-                        'target' => $achievement->target?->nilai_target_num ?? $achievement->target?->nilai_target_text,
-                        'nilai'  => $achievement->nilai_realisasi_num ?? $achievement->nilai_realisasi_text,
+                        'period' => $target->period->period_key,
+                        'target' => $target->nilai_target_num ?? $target->nilai_target_text,
+                        'nilai' => $target->achievement?->nilai_realisasi_num ?? $target->achievement?->nilai_realisasi_text,
                     ];
                 })->values();
 
@@ -101,7 +109,6 @@ class ReportController extends Controller
                 $row['opd'],
                 $row['indicator'],
                 $row['period'],
-                $row['status'],
                 $row['target'],
                 $row['realisasi'],
                 $row['achievement_rate'],
@@ -112,26 +119,54 @@ class ReportController extends Controller
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<Achievement>
+     * @return \Illuminate\Database\Eloquent\Builder<Target>
      */
-    private function baseQuery(Request $request): Builder
+    private function baseTargetQuery(Request $request): Builder
     {
-        return Achievement::with(['indicator', 'opd', 'period', 'target'])
+        return Target::with(['indicator', 'opd', 'period'])
             ->when($request->filled('period_id'), fn ($q) => $q->where('period_id', $request->integer('period_id')))
             ->when($request->filled('opd_id'), fn ($q) => $q->where('opd_id', $request->integer('opd_id')))
-            ->when($request->filled('indicator_id'), fn ($q) => $q->where('indicator_id', $request->integer('indicator_id')));
+            ->when($request->filled('indicator_id'), fn ($q) => $q->where('indicator_id', $request->integer('indicator_id')))
+            ->when($request->filled('tahun'), function ($q) use ($request) {
+                $q->whereHas('period', fn ($sq) => $sq->where('tahun', $request->input('tahun')));
+            })
+            ->when($request->filled('opd') && $request->input('opd') !== 'Semua', function ($q) use ($request) {
+                $q->whereHas('opd', fn ($sq) => $sq->where('singkatan', $request->input('opd')));
+            })
+            ->when($request->filled('jenis') && $request->input('jenis') !== 'Semua', function ($q) use ($request) {
+                $q->whereHas('indicator', fn ($sq) => $sq->where('jenis', $request->input('jenis')));
+            });
+    }
+
+    private function hydrateAchievements(Collection $targets): void
+    {
+        if ($targets->isEmpty()) {
+            return;
+        }
+
+        $achievements = Achievement::query()
+            ->whereIn('indicator_id', $targets->pluck('indicator_id'))
+            ->whereIn('opd_id', $targets->pluck('opd_id'))
+            ->whereIn('period_id', $targets->pluck('period_id'))
+            ->get();
+
+        $targets->each(function (Target $target) use ($achievements) {
+            $match = $achievements->first(fn (Achievement $a) =>
+                $a->indicator_id == $target->indicator_id &&
+                $a->opd_id == $target->opd_id &&
+                $a->period_id == $target->period_id
+            );
+            $target->setRelation('achievement', $match);
+        });
     }
 
     private function buildSummaryDataset(Request $request): array
     {
-        $records = $this->baseQuery($request)->get();
-        Achievement::hydrateTargets($records);
+        $records = $this->baseTargetQuery($request)->get();
+        $this->hydrateAchievements($records);
 
         $counts = [
-            'total'  => $records->count(),
-            'draft'  => $records->where('status', 'draft')->count(),
-            'valid'  => $records->where('status', 'valid')->count(),
-            'locked' => $records->where('status', 'locked')->count(),
+            'total' => $records->count(),
         ];
 
         $byOpd = $records->groupBy('opd_id')->map(function (Collection $items) {
@@ -142,34 +177,36 @@ class ReportController extends Controller
                     'id'   => $opd->id,
                     'nama' => $opd->nama,
                 ],
-                'total'  => $items->count(),
-                'locked' => $items->where('status', 'locked')->count(),
+                'total' => $items->count(),
             ];
         })->values();
 
-        $byIndicatorType = $records->groupBy(fn (Achievement $achievement) => $achievement->indicator->indicator_type)
+        $byIndicatorType = $records->groupBy(fn (Target $target) => $target->indicator->jenis)
             ->map(fn (Collection $items) => $items->count());
 
-        $recent = $records->sortByDesc('updated_at')->take(10)->values()->map(function (Achievement $achievement) {
-            return [
-                'id'         => $achievement->id,
-                'opd'        => $achievement->opd->nama,
-                'indicator'  => $achievement->indicator->nama,
-                'period'     => $achievement->period->period_key,
-                'status'     => $achievement->status,
-                'updated_at' => optional($achievement->updated_at)?->toISOString(),
-            ];
-        });
+        // Recent updates based on achievements
+        $recent = Achievement::with(['opd', 'indicator', 'period'])
+            ->latest('updated_at')
+            ->take(10)
+            ->get()
+            ->map(function (Achievement $achievement) {
+                return [
+                    'id' => $achievement->id,
+                    'opd' => $achievement->opd->nama,
+                    'indicator' => $achievement->indicator->nama,
+                    'period' => $achievement->period->period_key,
+                    'updated_at' => optional($achievement->updated_at)?->toISOString(),
+                ];
+            });
 
-        $rows = $records->map(function (Achievement $achievement) {
+        $rows = $records->map(function (Target $target) {
             return [
-                'opd'              => $achievement->opd->nama,
-                'indicator'        => $achievement->indicator->nama,
-                'period'           => $achievement->period->period_key,
-                'status'           => $achievement->status,
-                'target'           => $achievement->target?->nilai_target_num ?? $achievement->target?->nilai_target_text,
-                'realisasi'        => $achievement->nilai_realisasi_num ?? $achievement->nilai_realisasi_text,
-                'achievement_rate' => $this->calculateAchievementRate($achievement),
+                'opd' => $target->opd->nama,
+                'indicator' => $target->indicator->nama,
+                'period' => $target->period->period_key,
+                'target' => $target->nilai_target_num ?? $target->nilai_target_text,
+                'realisasi' => $target->achievement?->nilai_realisasi_num ?? $target->achievement?->nilai_realisasi_text,
+                'achievement_rate' => $this->calculateAchievementRate($target),
             ];
         });
 
@@ -183,10 +220,10 @@ class ReportController extends Controller
         ];
     }
 
-    private function calculateAchievementRate(Achievement $achievement): ?float
+    private function calculateAchievementRate(Target $target): ?float
     {
-        $targetValue = $achievement->target?->nilai_target_num;
-        $achievementValue = $achievement->nilai_realisasi_num;
+        $targetValue = $target->nilai_target_num;
+        $achievementValue = $target->achievement?->nilai_realisasi_num;
 
         if ($targetValue !== null && (float) $targetValue !== 0.0 && $achievementValue !== null) {
             return round(((float) $achievementValue / (float) $targetValue) * 100, 2);
@@ -209,6 +246,15 @@ class ReportController extends Controller
         $builder
             ->when($request->filled('period_id'), fn ($q) => $q->where('period_id', $request->integer('period_id')))
             ->when($request->filled('opd_id'), fn ($q) => $q->where('opd_id', $request->integer('opd_id')))
-            ->when($request->filled('indicator_id'), fn ($q) => $q->where('indicator_id', $request->integer('indicator_id')));
+            ->when($request->filled('indicator_id'), fn ($q) => $q->where('indicator_id', $request->integer('indicator_id')))
+            ->when($request->filled('tahun'), function ($q) use ($request) {
+                $q->whereHas('period', fn ($sq) => $sq->where('tahun', $request->input('tahun')));
+            })
+            ->when($request->filled('opd') && $request->input('opd') !== 'Semua', function ($q) use ($request) {
+                $q->whereHas('opd', fn ($sq) => $sq->where('singkatan', $request->input('opd')));
+            })
+            ->when($request->filled('jenis') && $request->input('jenis') !== 'Semua', function ($q) use ($request) {
+                $q->whereHas('indicator', fn ($sq) => $sq->where('jenis', $request->input('jenis')));
+            });
     }
 }

@@ -3,17 +3,17 @@ import { useMemo } from 'react';
 import { AppShell } from '../components/AppShell';
 import { DataTable } from '../components/DataTable';
 import { StatCard } from '../components/StatCard';
-import { ProgressBar, StatusBadge } from '../components/StatusBar';
+import { ProgressBar } from '../components/StatusBar';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
 import { useApi } from '../lib/api';
 
 type AchievementData = {
     id: number;
-    status: 'draft' | 'valid' | 'locked';
     capaian: number;
     periode: string;
     target?: { nilai: number; indicator?: { nama: string }; opd?: { singkatan: string } };
+    created_at?: string;
 };
 
 type IndicatorData = { id: number; nama: string };
@@ -30,10 +30,11 @@ export default function Dashboard() {
     const { data: targets, loading: loadingTargets } = useApi<TargetData[]>('/targets', []);
 
     const loading = loadingAchievements || loadingIndicators || loadingTargets;
-    const drafts = useMemo(
+
+    const recentAchievements = useMemo(
         () =>
             (achievements || [])
-                .filter((c) => c.status === 'draft')
+                .slice(0, 5) // Take first 5 (assuming API returns sorted or we sort here)
                 .map((item) => ({
                     ...item,
                     indikator: item.target?.indicator?.nama ?? '-',
@@ -43,13 +44,11 @@ export default function Dashboard() {
         [achievements],
     );
 
-    const validatedCount = useMemo(() => (achievements || []).filter((a) => a.status === 'valid').length, [achievements]);
-
     const statCards = [
         { title: 'Total Indikator', value: (indicators?.length || 0).toString(), description: 'IKU / IKD / IKK aktif', trend: 'up' as const },
         { title: 'Target aktif', value: (targets?.length || 0).toString(), description: 'Periode berjalan', progress: 68 },
-        { title: 'Capaian tervalidasi', value: validatedCount.toString(), description: 'Siap lapor', progress: 72 },
-        { title: 'Draft perlu dilanjutkan', value: drafts.length.toString(), description: 'Lengkapi evidensi & validasi', trend: 'down' as const },
+        { title: 'Total Capaian', value: (achievements?.length || 0).toString(), description: 'Data tersimpan', progress: 72 },
+        { title: 'OPD Terdaftar', value: '34', description: 'Organisasi Perangkat Daerah', trend: 'up' as const }, // Hardcoded for now or fetch if available
     ];
 
     return (
@@ -65,10 +64,10 @@ export default function Dashboard() {
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-semibold text-slate-800">Draft yang perlu dilanjutkan</p>
-                                <p className="text-xs text-slate-500">Lengkapi nilai, evidensi, dan validasi.</p>
+                                <p className="text-sm font-semibold text-slate-800">Capaian Terbaru</p>
+                                <p className="text-xs text-slate-500">Data kinerja yang baru saja diinput.</p>
                             </div>
-                            <Badge variant="warning">Butuh aksi</Badge>
+                            <Badge variant="outline">Terbaru</Badge>
                         </div>
                         <DataTable
                             columns={[
@@ -84,13 +83,8 @@ export default function Dashboard() {
                                         </div>
                                     ),
                                 },
-                                {
-                                    key: 'status',
-                                    header: 'Status',
-                                    render: () => <StatusBadge status="draft" />,
-                                },
                             ]}
-                            data={drafts}
+                            data={recentAchievements}
                         />
                     </div>
                     <div className="space-y-3">

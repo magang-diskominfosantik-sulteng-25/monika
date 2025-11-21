@@ -1,7 +1,6 @@
 import { Filter } from 'lucide-react';
 import { ReactNode } from 'react';
 
-import { Button } from './ui/button';
 import { Input } from './ui/input';
 
 interface ToolbarFilterProps {
@@ -31,9 +30,6 @@ export function ToolbarFilter({ title, children, searchPlaceholder, onSearch }: 
                     </div>
                 )}
                 {children}
-                <Button variant="secondary" size="sm" type="button" aria-label="Bersihkan filter">
-                    Reset
-                </Button>
             </div>
         </div>
     );

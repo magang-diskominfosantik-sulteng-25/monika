@@ -21,13 +21,12 @@ class AchievementSummaryExport implements FromCollection, WithHeadings, ShouldAu
     public function headings(): array
     {
         return [
-            'OPD',
-            'Indicator',
-            'Period',
-            'Status',
+            'Organisasi Perangkat Daerah (OPD)',
+            'Tipe Indikator',
+            'Periode',
             'Target',
             'Realisasi',
-            'Achievement Rate (%)',
+            'Tingkat Capaian (%)',
         ];
     }
 }
