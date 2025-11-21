@@ -26,10 +26,6 @@ class EvidenceController extends Controller
 
     public function store(StoreEvidenceRequest $request, Achievement $achievement)
     {
-        if ($achievement->isLocked()) {
-            abort(422, __('Realisasi terkunci dan tidak dapat ditambah evidensi.'));
-        }
-
         if ($achievement->evidences()->count() >= 5) {
             abort(422, __('Maksimal 5 dokumen evidensi per realisasi.'));
         }
@@ -83,5 +79,20 @@ class EvidenceController extends Controller
         }
 
         return Storage::disk('evidences')->download($evidence->file_path);
+    }
+
+    public function preview(Evidence $evidence)
+    {
+        if (! $evidence->file_path) {
+            abort(404);
+        }
+
+        $path = Storage::disk('evidences')->path($evidence->file_path);
+
+        if (! file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
     }
 }

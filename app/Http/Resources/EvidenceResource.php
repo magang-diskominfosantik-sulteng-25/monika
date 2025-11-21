@@ -25,6 +25,7 @@ class EvidenceResource extends JsonResource
             'created_at'     => optional($this->created_at)?->toISOString(),
             'updated_at'     => optional($this->updated_at)?->toISOString(),
             'download_url'   => $this->file_path ? route('evidences.download', $this->id) : null,
+            'preview_url' => $this->file_path ? route('evidences.preview', $this->id) : null,
         ];
     }
 }
