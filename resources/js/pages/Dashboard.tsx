@@ -5,51 +5,88 @@ import { DataTable } from '../components/DataTable';
 import { StatCard } from '../components/StatCard';
 import { ProgressBar } from '../components/StatusBar';
 import { Badge } from '../components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 import { useApi } from '../lib/api';
 
-type AchievementData = {
-    id: number;
-    capaian: number;
-    periode: string;
-    target?: { nilai: number; indicator?: { nama: string }; opd?: { singkatan: string } };
-    created_at?: string;
+type ReportRow = {
+    opd: string;
+    indicator: string;
+    period: string;
+    target: number | string;
+    realisasi: number | string;
+    achievement_rate: number | null;
 };
 
-type IndicatorData = { id: number; nama: string };
-type TargetData = { id: number; nilai: number };
-
-const heatmapCells = Array.from({ length: 12 }, (_, idx) => ({
-    label: new Date(2026, idx).toLocaleString('id-ID', { month: 'short' }),
-    value: Math.round(Math.random() * 100),
-}));
+type SummaryResponse = {
+    filters: Record<string, unknown>;
+    counts: { total: number };
+    by_opd: Array<{ opd: { id: number; nama: string }; total: number }>;
+    by_indicator_type: Record<string, number>;
+    recent: Array<{ id: number; opd: string; indicator: string; period: string; updated_at: string }>;
+    rows: ReportRow[];
+};
 
 export default function Dashboard() {
-    const { data: achievements, loading: loadingAchievements } = useApi<AchievementData[]>('/achievements', []);
-    const { data: indicators, loading: loadingIndicators } = useApi<IndicatorData[]>('/indicators', []);
-    const { data: targets, loading: loadingTargets } = useApi<TargetData[]>('/targets', []);
-
-    const loading = loadingAchievements || loadingIndicators || loadingTargets;
+    const { data: summary, loading } = useApi<SummaryResponse>('/reports/summary');
 
     const recentAchievements = useMemo(
         () =>
-            (achievements || [])
-                .slice(0, 5) // Take first 5 (assuming API returns sorted or we sort here)
-                .map((item) => ({
-                    ...item,
-                    indikator: item.target?.indicator?.nama ?? '-',
-                    opd: item.target?.opd?.singkatan ?? '-',
-                    target: item.target?.nilai ?? 0,
-                })),
-        [achievements],
+            (summary?.recent || []).slice(0, 5).map((item) => ({
+                indikator: item.indicator,
+                opd: item.opd,
+                period: item.period,
+                updated_at: item.updated_at ? new Date(item.updated_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-',
+            })),
+        [summary?.recent],
     );
 
+    const completionStats = useMemo(() => {
+        const rows = summary?.rows || [];
+        const completed = rows.filter((row) => row.achievement_rate !== null);
+        const average =
+            completed.length > 0
+                ? Number((completed.reduce((sum, row) => sum + (row.achievement_rate ?? 0), 0) / completed.length).toFixed(1))
+                : 0;
+
+        return {
+            completed: completed.length,
+            average,
+        };
+    }, [summary?.rows]);
+
+    const totalTargets = summary?.counts.total ?? 0;
+    const indicatorTotals = Object.values(summary?.by_indicator_type || {}).reduce((sum, value) => sum + value, 0);
+    const opdParticipation = summary?.by_opd?.length ?? 0;
+
     const statCards = [
-        { title: 'Total Indikator', value: (indicators?.length || 0).toString(), description: 'IKU / IKD / IKK aktif', trend: 'up' as const },
-        { title: 'Target aktif', value: (targets?.length || 0).toString(), description: 'Periode berjalan', progress: 68 },
-        { title: 'Total Capaian', value: (achievements?.length || 0).toString(), description: 'Data tersimpan', progress: 72 },
-        { title: 'OPD Terdaftar', value: '34', description: 'Organisasi Perangkat Daerah', trend: 'up' as const }, // Hardcoded for now or fetch if available
+        { title: 'Total Target Kinerja', value: totalTargets.toString(), description: 'Seluruh target yang tercatat', trend: 'up' as const },
+        { title: 'Target dengan Capaian', value: completionStats.completed.toString(), description: 'Memiliki data realisasi', progress: totalTargets ? Math.round((completionStats.completed / totalTargets) * 100) : 0 },
+        { title: 'Rata-rata Capaian', value: `${completionStats.average}%`, description: 'Rerata terhadap target', progress: Math.min(100, completionStats.average) },
+        { title: 'Partisipasi OPD', value: opdParticipation.toString(), description: 'OPD yang menyetor data', trend: 'up' as const },
     ];
+
+    const indicatorTypeDistribution = useMemo(() => {
+        const entries = Object.entries(summary?.by_indicator_type || {});
+        return entries.map(([type, count]) => ({
+            type,
+            count,
+            percent: indicatorTotals ? Math.round((count / indicatorTotals) * 100) : 0,
+        }));
+    }, [summary?.by_indicator_type, indicatorTotals]);
+
+    const opdContribution = useMemo(() => {
+        const items = summary?.by_opd || [];
+        const base = totalTargets || Math.max(...items.map((item) => item.total), 1);
+        return items
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 6)
+            .map((item) => ({
+                name: item.opd.nama,
+                total: item.total,
+                percent: Math.round((item.total / base) * 100),
+            }));
+    }, [summary?.by_opd, totalTargets]);
 
     return (
         <AppShell title="Dashboard" description="Ringkasan progres indikator kinerja Diskominfo Prov. Sulawesi Tengah" active="dashboard">
@@ -67,42 +104,72 @@ export default function Dashboard() {
                                 <p className="text-sm font-semibold text-slate-800">Capaian Terbaru</p>
                                 <p className="text-xs text-slate-500">Data kinerja yang baru saja diinput.</p>
                             </div>
-                            <Badge variant="outline">Terbaru</Badge>
+                            <Badge variant="info">Terbaru</Badge>
                         </div>
-                        <DataTable
-                            columns={[
-                                { key: 'indikator', header: 'Indikator', sortable: true },
-                                { key: 'opd', header: 'OPD' },
-                                { key: 'periode', header: 'Periode', sortable: true },
-                                {
-                                    key: 'capaian',
-                                    header: 'Capaian',
-                                    render: (val) => (
-                                        <div>
-                                            <p className="font-semibold">{val}</p>
-                                        </div>
-                                    ),
-                                },
-                            ]}
-                            data={recentAchievements}
-                        />
+                        {loading ? (
+                            <Skeleton className="h-[360px] w-full rounded-2xl" />
+                        ) : (
+                            <DataTable
+                                columns={[
+                                    { key: 'indikator', header: 'Indikator', sortable: true },
+                                    { key: 'opd', header: 'OPD', sortable: true },
+                                    { key: 'period', header: 'Periode', sortable: true },
+                                    { key: 'updated_at', header: 'Diperbarui' },
+                                ]}
+                                data={recentAchievements}
+                            />
+                        )}
                     </div>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-slate-800">Heatmap capaian</p>
-                                <p className="text-xs text-slate-500">Persentase rata-rata per bulan</p>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            {heatmapCells.map((cell) => (
-                                <div key={cell.label} className="flex flex-col gap-1 rounded-xl bg-white p-3 shadow-sm">
-                                    <p className="text-xs font-semibold text-slate-500">{cell.label}</p>
-                                    <ProgressBar value={cell.value} />
-                                    <p className="text-sm font-semibold text-slate-800">{cell.value}%</p>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-sm text-slate-700">Komposisi Jenis Indikator</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {loading ? (
+                                    <Skeleton className="h-40 w-full rounded-2xl" />
+                                ) : indicatorTypeDistribution.length === 0 ? (
+                                    <p className="text-sm text-slate-500">Belum ada data indikator.</p>
+                                ) : (
+                                    indicatorTypeDistribution.map((item) => (
+                                        <div key={item.type} className="space-y-1">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-slate-600">{item.type}</span>
+                                                <span className="font-semibold text-slate-900">{item.count}</span>
+                                            </div>
+                                            <ProgressBar value={item.percent} />
+                                            <p className="text-xs text-slate-500">{item.percent}% dari {indicatorTotals} indikator</p>
+                                        </div>
+                                    ))
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-sm text-slate-700">Kontribusi OPD</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {loading ? (
+                                    <Skeleton className="h-40 w-full rounded-2xl" />
+                                ) : opdContribution.length === 0 ? (
+                                    <p className="text-sm text-slate-500">Belum ada data capaian OPD.</p>
+                                ) : (
+                                    opdContribution.map((item) => (
+                                        <div key={item.name} className="space-y-1">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div>
+                                                    <p className="font-semibold text-slate-800">{item.name}</p>
+                                                    <p className="text-xs text-slate-500">{item.total} target</p>
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-800">{item.percent}%</span>
+                                            </div>
+                                            <ProgressBar value={item.percent} />
+                                        </div>
+                                    ))
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </div>
