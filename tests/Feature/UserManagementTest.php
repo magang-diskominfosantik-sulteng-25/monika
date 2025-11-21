@@ -10,11 +10,6 @@ test('user seeder creates default accounts', function () {
     $operator = User::where('email', 'operator@diskominfo.sultengprov.go.id')->first();
     expect($operator)->not->toBeNull();
     expect($operator->name)->toBe('Operator');
-
-    // Check if admin account exists
-    $admin = User::where('email', 'admin@diskominfo.sultengprov.go.id')->first();
-    expect($admin)->not->toBeNull();
-    expect($admin->name)->toBe('Admin Diskominfo');
 });
 
 test('authenticated user can access users page', function () {

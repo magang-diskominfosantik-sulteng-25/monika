@@ -59,7 +59,6 @@ export default function AuditLogPage() {
                         },
                         { key: 'entity', header: 'Entitas' },
                         { key: 'entity_id', header: 'ID Entitas' },
-                        { key: 'reason', header: 'Alasan' },
                     ]}
                     data={auditLogs || []}
                 />
