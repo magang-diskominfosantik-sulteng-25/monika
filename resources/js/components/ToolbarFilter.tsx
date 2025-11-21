@@ -17,7 +17,7 @@ export function ToolbarFilter({ title, children, searchPlaceholder, onSearch }: 
                 <Filter className="h-4 w-4" aria-hidden />
                 <span>{title}</span>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-row items-center gap-3">
                 {searchPlaceholder && (
                     <div className="relative">
                         <Input

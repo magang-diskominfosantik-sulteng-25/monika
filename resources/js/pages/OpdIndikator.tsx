@@ -16,6 +16,7 @@ import { useApi, useMutation } from '../lib/api';
 import { IndicatorList } from './OpdIndikator/components/IndicatorList';
 import { OpdInfoCard } from './OpdIndikator/components/OpdInfoCard';
 import { TargetAchievementTable } from './OpdIndikator/components/TargetAchievementTable';
+import { EvidenceModal } from './OpdIndikator/components/EvidenceModal';
 import { AchievementData, EnrichedData, IndicatorData, OpdData, PeriodData, TargetData } from './OpdIndikator/types';
 
 export default function OpdIndikatorPage() {
@@ -43,6 +44,11 @@ export default function OpdIndikatorPage() {
     const [selectedAchievement, setSelectedAchievement] = useState<AchievementData | null>(null);
     const [showActionModal, setShowActionModal] = useState(false);
     const [actionRow, setActionRow] = useState<EnrichedData | null>(null);
+    const [showEvidenceModal, setShowEvidenceModal] = useState(false);
+    const [evidenceContext, setEvidenceContext] = useState<{
+        achievement: AchievementData | null;
+        row: EnrichedData | null;
+    }>({ achievement: null, row: null });
     const [form, setForm] = useState({
         indicator_id: 0,
         opd_id: 0,
@@ -478,6 +484,32 @@ export default function OpdIndikatorPage() {
                                 </div>
                             )}
                         </div>
+
+                        <div className="space-y-2">
+                            <h4 className="leading-none font-medium">Evidensi</h4>
+                            <Button
+                                variant="outline"
+                                className="w-full justify-start"
+                                disabled={!actionRow?.achievement_id}
+                                onClick={() => {
+                                    if (actionRow) {
+                                        const achievementItem =
+                                            opdAchievements.find((a) => a.id === actionRow.achievement_id) ?? null;
+                                        setEvidenceContext({ achievement: achievementItem, row: actionRow });
+                                        setShowEvidenceModal(true);
+                                        setShowActionModal(false);
+                                    }
+                                }}
+                            >
+                                <ListChecks className="mr-2 h-4 w-4" />
+                                Lihat Evidensi
+                            </Button>
+                            {!actionRow?.achievement_id && (
+                                <p className="text-xs text-slate-500">
+                                    Tambahkan capaian terlebih dahulu sebelum mengunggah evidensi.
+                                </p>
+                            )}
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="secondary" onClick={() => setShowActionModal(false)}>
@@ -486,6 +518,16 @@ export default function OpdIndikatorPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <EvidenceModal
+                open={showEvidenceModal}
+                onOpenChange={setShowEvidenceModal}
+                achievement={evidenceContext.achievement}
+                indicatorName={evidenceContext.row?.indikator || '-'}
+                periodLabel={evidenceContext.row?.periode || '-'}
+                targetValue={evidenceContext.row?.nilai_target ?? '-'}
+                achievementValue={evidenceContext.row?.nilai_realisasi ?? '-'}
+            />
 
             {/* Create Modal */}
             <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>

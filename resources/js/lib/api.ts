@@ -126,3 +126,5 @@ export function useMutation<TPayload, TResult>(basePath: string, method: 'post' 
 
     return { mutate, loading, error } as const;
 }
+
+export { api };
