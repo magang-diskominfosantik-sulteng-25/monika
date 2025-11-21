@@ -29,7 +29,7 @@ export function TargetAchievementTable({
 }: TargetAchievementTableProps) {
     return (
         <Card className="flex h-full flex-col">
-            <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <div>
                     <CardTitle className="text-base">Target & Capaian</CardTitle>
                     <p className="mt-1 text-sm text-slate-500">

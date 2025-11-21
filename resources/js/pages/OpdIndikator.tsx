@@ -316,7 +316,7 @@ export default function OpdIndikatorPage() {
         <AppShell title="Indikator OPD" description="Kelola indikator dan target per OPD" active="opd-indikator">
             <div className="space-y-6">
                 <ToolbarFilter title="Pilih OPD">
-                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                    <div className="flex w-full flex-col gap-2 md:flex-row md:items-center">
                         {isLoadingOpd ? (
                             <Skeleton className="h-10 w-64" />
                         ) : (
@@ -342,7 +342,7 @@ export default function OpdIndikatorPage() {
                         <OpdInfoCard selectedOpd={selectedOpd} />
 
                         <div className="grid gap-6 lg:grid-cols-12">
-                            <div className="space-y-4 lg:col-span-4">
+                            <div className="min-w-0 space-y-4 lg:col-span-4">
                                 <IndicatorList
                                     opdIndicators={opdIndicators}
                                     selectedIndicatorId={selectedIndicatorId}
@@ -363,7 +363,7 @@ export default function OpdIndikatorPage() {
                                 />
                             </div>
 
-                            <div className="space-y-4 lg:col-span-8">
+                            <div className="min-w-0 space-y-4 lg:col-span-8">
                                 <TargetAchievementTable
                                     isLoadingTargets={isLoadingTargets}
                                     isLoadingAchievements={isLoadingAchievements}

@@ -91,14 +91,14 @@ export default function Dashboard() {
     return (
         <AppShell title="Dashboard" description="Ringkasan progres indikator kinerja Diskominfo Prov. Sulawesi Tengah" active="dashboard">
             <div className="space-y-6">
-                <div className="grid gap-4 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {loading
                         ? Array.from({ length: 4 }).map((_, idx) => <Skeleton key={idx} className="h-32 rounded-2xl" />)
                         : statCards.map((card) => <StatCard key={card.title} {...card} />)}
                 </div>
 
                 <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-                    <div className="space-y-3">
+                    <div className="min-w-0 space-y-3">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-semibold text-slate-800">Capaian Terbaru</p>
@@ -138,7 +138,9 @@ export default function Dashboard() {
                                                 <span className="font-semibold text-slate-900">{item.count}</span>
                                             </div>
                                             <ProgressBar value={item.percent} />
-                                            <p className="text-xs text-slate-500">{item.percent}% dari {indicatorTotals} indikator</p>
+                                            <p className="text-xs text-slate-500">
+                                                {item.percent}% dari {indicatorTotals} indikator
+                                            </p>
                                         </div>
                                     ))
                                 )}

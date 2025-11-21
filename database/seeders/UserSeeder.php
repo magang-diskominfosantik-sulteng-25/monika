@@ -18,11 +18,5 @@ class UserSeeder extends Seeder
             'email' => 'operator@diskominfo.sultengprov.go.id',
             'password' => Hash::make('password'),
         ]);
-
-        User::create([
-            'name' => 'Admin Diskominfo',
-            'email' => 'admin@diskominfo.sultengprov.go.id',
-            'password' => Hash::make('password'),
-        ]);
     }
 }

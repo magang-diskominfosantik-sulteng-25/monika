@@ -183,7 +183,7 @@ export default function IndikatorPage() {
     return (
         <AppShell title="Indikator" description="Kelola IKU/IKD/IKK" active="indikator">
             <div className="space-y-4">
-                <ToolbarFilter title="Filter indikator">
+                <ToolbarFilter title="Daftar Indikator">
                     <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah Indikator
                     </Button>

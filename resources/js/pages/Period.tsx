@@ -150,7 +150,7 @@ export default function PeriodPage() {
     return (
         <AppShell title="Periode" description="Daftar periode pelaporan" active="period">
             <div className="space-y-4">
-                <ToolbarFilter title="Filter periode">
+                <ToolbarFilter title="Daftar Indikator">
                   <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah Periode
                     </Button>
