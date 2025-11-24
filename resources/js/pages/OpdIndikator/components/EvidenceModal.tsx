@@ -84,6 +84,10 @@ export function EvidenceModal({ open, onOpenChange, achievement, indicatorName, 
             toast.error('Unggah file atau isi tautan terlebih dahulu');
             return;
         }
+        if (!form.deskripsi) {
+            toast.error('Deskripsi wajib diisi');
+            return;
+        }
 
         const formData = new FormData();
         if (form.file) formData.append('file', form.file);
@@ -179,7 +183,9 @@ export function EvidenceModal({ open, onOpenChange, achievement, indicatorName, 
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Deskripsi</Label>
+                                        <Label>
+                                            Deskripsi <span className="text-red-500">*</span>
+                                        </Label>
                                         <Textarea
                                             rows={3}
                                             placeholder="Keterangan singkat evidensi"

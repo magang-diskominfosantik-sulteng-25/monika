@@ -9,6 +9,7 @@ type AuditLogData = {
     action: string;
     entity: string;
     entity_id: number;
+    entity_description: string;
     before: unknown;
     after: unknown;
     reason: string | null;
@@ -58,7 +59,16 @@ export default function AuditLogPage() {
                             render: (val) => getActionBadge(val as string),
                         },
                         { key: 'entity', header: 'Entitas' },
-                        { key: 'entity_id', header: 'ID Entitas' },
+                        {
+                            key: 'entity_description',
+                            header: 'Deskripsi Entitas',
+                            render: (val, row) => (
+                                <div className="flex flex-col">
+                                    <span className="font-medium">{val as string}</span>
+                                    <span className="text-xs text-gray-500">ID: {row.entity_id}</span>
+                                </div>
+                            ),
+                        },
                     ]}
                     data={auditLogs || []}
                 />

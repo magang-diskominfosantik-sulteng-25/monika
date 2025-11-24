@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
@@ -145,6 +146,7 @@ class ReportController extends Controller
         }
 
         $achievements = Achievement::query()
+            ->with('evidences')
             ->whereIn('indicator_id', $targets->pluck('indicator_id'))
             ->whereIn('opd_id', $targets->pluck('opd_id'))
             ->whereIn('period_id', $targets->pluck('period_id'))
@@ -207,6 +209,14 @@ class ReportController extends Controller
                 'target' => $target->nilai_target_num ?? $target->nilai_target_text,
                 'realisasi' => $target->achievement?->nilai_realisasi_num ?? $target->achievement?->nilai_realisasi_text,
                 'achievement_rate' => $this->calculateAchievementRate($target),
+                'evidences' => $target->achievement?->evidences->map(function ($evidence) {
+                    return [
+                        'id' => $evidence->id,
+                        'description' => $evidence->deskripsi,
+                        'file_url' => $evidence->file_path ? Storage::url($evidence->file_path) : null,
+                        'external_url' => $evidence->url_eksternal,
+                    ];
+                }) ?? [],
             ];
         });
 

@@ -1,4 +1,4 @@
-import { Building2, Download, FileText, PieChart } from 'lucide-react';
+import { Building2, Download, ExternalLink, Eye, File, FileText, PieChart } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -8,8 +8,16 @@ import { DataTable } from '../components/DataTable';
 import { ToolbarFilter } from '../components/ToolbarFilter';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Select } from '../components/ui/select';
 import { useApi } from '../lib/api';
+
+type Evidence = {
+    id: number;
+    description: string;
+    file_url: string | null;
+    external_url: string | null;
+};
 
 type ReportData = {
     opd: string;
@@ -18,6 +26,7 @@ type ReportData = {
     target: number | string;
     realisasi: number | string;
     achievement_rate: number | null;
+    evidences: Evidence[];
 };
 
 type SummaryResponse = {
@@ -38,6 +47,8 @@ type ReportOptions = {
 
 export default function LaporanPage() {
     const [filters, setFilters] = useState({ tahun: '2025', jenis: 'Semua', opd: 'Semua' });
+    const [selectedEvidences, setSelectedEvidences] = useState<Evidence[]>([]);
+    const [isEvidenceModalOpen, setIsEvidenceModalOpen] = useState(false);
 
     const { data: options } = useApi<ReportOptions>('/reports/options');
 
@@ -178,8 +189,29 @@ export default function LaporanPage() {
                                 const numVal = Number(val);
                                 return (
                                     <span className={numVal >= 100 ? 'font-bold text-green-600' : numVal >= 80 ? 'text-blue-600' : 'text-red-600'}>
-                                        {val}%
+                                        {val as number}%
                                     </span>
+                                );
+                            },
+                        },
+                        {
+                            key: 'evidences',
+                            header: 'Evidence',
+                            render: (val) => {
+                                const evidences = val as Evidence[];
+                                if (!evidences || evidences.length === 0) return <span className="text-slate-400">-</span>;
+                                return (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setSelectedEvidences(evidences);
+                                            setIsEvidenceModalOpen(true);
+                                        }}
+                                    >
+                                        <Eye className="mr-1 h-4 w-4" />
+                                        Lihat ({evidences.length})
+                                    </Button>
                                 );
                             },
                         },
@@ -187,6 +219,51 @@ export default function LaporanPage() {
                     data={preview}
                 />
             </div>
+
+            <Dialog open={isEvidenceModalOpen} onOpenChange={setIsEvidenceModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Bukti Dukung (Evidence)</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        {selectedEvidences.map((evidence) => (
+                            <div key={evidence.id} className="flex items-start gap-3 rounded-lg border p-3">
+                                <div className="mt-1">
+                                    <FileText className="h-5 w-5 text-slate-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium">{evidence.description || 'Tanpa deskripsi'}</p>
+                                    <div className="mt-2 flex flex-wrap gap-3">
+                                        {evidence.external_url && (
+                                            <a
+                                                href={evidence.external_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                            >
+                                                <ExternalLink className="h-3 w-3" />
+                                                Buka Tautan
+                                            </a>
+                                        )}
+                                        {evidence.file_url && (
+                                            <a
+                                                href={evidence.file_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 text-xs text-orange-600 hover:underline"
+                                            >
+                                                <File className="h-3 w-3" />
+                                                Unduh File
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {selectedEvidences.length === 0 && <p className="text-center text-slate-500">Tidak ada evidence.</p>}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppShell>
     );
 }

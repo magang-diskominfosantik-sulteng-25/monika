@@ -52,7 +52,7 @@ export default function PeriodPage() {
 
         // Validasi quarter untuk frequency semester/quarter
         if ((form.frequency === 'quarter' || form.frequency === 'semester') && !form.quarter) {
-            toast.error('Quarter wajib diisi untuk frekuensi triwulan/semester');
+            toast.error('Triwulan/Semester wajib diisi untuk frekuensi triwulan/semester');
             return;
         }
 
@@ -151,7 +151,7 @@ export default function PeriodPage() {
         <AppShell title="Periode" description="Daftar periode pelaporan" active="period">
             <div className="space-y-4">
                 <ToolbarFilter title="Daftar Indikator">
-                  <Button onClick={() => setShowCreateModal(true)}>
+                    <Button onClick={() => setShowCreateModal(true)}>
                         <Plus className="mr-2 h-4 w-4" /> Tambah Periode
                     </Button>
                 </ToolbarFilter>
@@ -222,7 +222,7 @@ export default function PeriodPage() {
                                 onChange={(e) => setForm({ ...form, tahun: parseInt(e.target.value) })}
                             />
                         </div>
-                        {(form.frequency === 'quarter' || form.frequency === 'semester') && (
+                        {form.frequency === 'quarter' && (
                             <div>
                                 <Label htmlFor="quarter">Triwulan *</Label>
                                 <Select
@@ -235,6 +235,20 @@ export default function PeriodPage() {
                                     <option value="2">Q2</option>
                                     <option value="3">Q3</option>
                                     <option value="4">Q4</option>
+                                </Select>
+                            </div>
+                        )}
+                        {form.frequency === 'semester' && (
+                            <div>
+                                <Label htmlFor="semester">Semester *</Label>
+                                <Select
+                                    id="semester"
+                                    value={form.quarter?.toString() || ''}
+                                    onChange={(e) => setForm({ ...form, quarter: parseInt(e.target.value) })}
+                                >
+                                    <option value="">Pilih Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
                                 </Select>
                             </div>
                         )}
@@ -273,12 +287,7 @@ export default function PeriodPage() {
                         </div>
                         <div>
                             <Label htmlFor="end_date">Tanggal Selesai *</Label>
-                            <Input
-                                id="end_date"
-                                type="date"
-                                value={form.end_date}
-                                onChange={(e) => setForm({ ...form, end_date: e.target.value })}
-                            />
+                            <Input id="end_date" type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
                         </div>
                     </div>
                     <DialogFooter>
@@ -322,7 +331,7 @@ export default function PeriodPage() {
                                 onChange={(e) => setForm({ ...form, tahun: parseInt(e.target.value) })}
                             />
                         </div>
-                        {(form.frequency === 'quarter' || form.frequency === 'semester') && (
+                        {form.frequency === 'quarter' && (
                             <div>
                                 <Label htmlFor="edit-quarter">Triwulan *</Label>
                                 <Select
@@ -335,6 +344,20 @@ export default function PeriodPage() {
                                     <option value="2">Q2</option>
                                     <option value="3">Q3</option>
                                     <option value="4">Q4</option>
+                                </Select>
+                            </div>
+                        )}
+                        {form.frequency === 'semester' && (
+                            <div>
+                                <Label htmlFor="edit-semester">Semester *</Label>
+                                <Select
+                                    id="edit-semester"
+                                    value={form.quarter?.toString() || ''}
+                                    onChange={(e) => setForm({ ...form, quarter: parseInt(e.target.value) })}
+                                >
+                                    <option value="">Pilih Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
                                 </Select>
                             </div>
                         )}

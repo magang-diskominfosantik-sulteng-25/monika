@@ -22,7 +22,7 @@ class AchievementSummaryExport implements FromCollection, WithHeadings, ShouldAu
     {
         return [
             'Organisasi Perangkat Daerah (OPD)',
-            'Tipe Indikator',
+            'Indikator',
             'Periode',
             'Target',
             'Realisasi',

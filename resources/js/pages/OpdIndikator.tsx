@@ -319,7 +319,7 @@ export default function OpdIndikatorPage() {
     });
 
     return (
-        <AppShell title="Indikator OPD" description="Kelola indikator dan target per OPD" active="opd-indikator">
+        <AppShell title="Integrasi OPD" description="Kelola target dan capaian per OPD" active="opd-indikator">
             <div className="space-y-6">
                 <ToolbarFilter title="Pilih OPD">
                     <div className="flex w-full flex-col gap-2 md:flex-row md:items-center">

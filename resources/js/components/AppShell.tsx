@@ -41,7 +41,7 @@ export function AppShell({ children, title, description, active }: AppShellProps
                 />
             )}
 
-            <div className="mx-auto min-h-full px-4 py-6 lg:grid lg:grid-cols-[280px_1fr] lg:items-start lg:gap-6 lg:px-12">
+            <div className="mx-auto min-h-full px-6 py-6 lg:grid lg:grid-cols-[280px_1fr] lg:items-start lg:gap-6 lg:px-12">
                 <aside
                     className={cn(
                         'fixed inset-y-0 left-0 z-50 w-72 bg-white transition-transform duration-300 ease-in-out lg:sticky lg:top-6 lg:z-auto lg:block lg:h-[calc(100vh-3rem)] lg:w-auto lg:rounded-3xl lg:border lg:border-slate-200 lg:shadow-sm lg:transition-none',
@@ -112,14 +112,14 @@ export function AppShell({ children, title, description, active }: AppShellProps
                 </aside>
                 <main className="flex flex-col gap-4 lg:gap-6">
                     <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                        <div className="flex align-middle gap-4 space-y-1">
+                            <div className="flex lg:hidden items-center gap-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
                                 <button
-                                    className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-blue-700 ring-1 ring-blue-100"
+                                    className="inline-flex items-center rounded-md bg-blue-50 px-3 py-1 text-blue-700 ring-1 ring-blue-100"
                                     onClick={() => setSidebarOpen((open) => !open)}
                                 >
-                                    <Menu className="mr-2 h-4 w-4" aria-hidden />
-                                    Menu
+                                    <Menu className="h-5 w-5" aria-hidden />
+                                    {/* Menu */}
                                 </button>
                             </div>
                             <div>
@@ -127,7 +127,6 @@ export function AppShell({ children, title, description, active }: AppShellProps
                                 {description && <p className="text-sm text-slate-600">{description}</p>}
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 self-start">{/* User profile moved to sidebar */}</div>
                     </header>
                     <div className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:p-7">{children}</div>
                 </main>

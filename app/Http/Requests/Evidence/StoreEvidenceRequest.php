@@ -14,7 +14,7 @@ class StoreEvidenceRequest extends FormRequest
         return [
             'file' => ['required_without:url_eksternal', 'nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx,ppt,pptx', 'max:10240'],
             'url_eksternal' => ['required_without:file', 'nullable', 'url'],
-            'deskripsi'     => ['nullable', 'string', 'max:255'],
+            'deskripsi' => ['required', 'string', 'max:255'],
         ];
     }
 }
