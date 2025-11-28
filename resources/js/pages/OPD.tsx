@@ -12,6 +12,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select } from '../components/ui/select';
 import { useApi, useMutation } from '../lib/api';
+import { handleError } from '../lib/handle-error';
 
 type OpdData = {
     id: number;
@@ -46,10 +47,7 @@ export default function OPDPage() {
             toast.success('OPD berhasil ditambahkan');
             refetch();
         } catch (error: unknown) {
-            console.error('Error menambahkan OPD:', error);
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            const errorMessage = err.response?.data?.message || err.message || 'Gagal menambahkan OPD';
-            toast.error(errorMessage);
+            handleError(error, 'Gagal menambahkan OPD');
         }
     };
 
@@ -77,8 +75,7 @@ export default function OPDPage() {
             toast.success('OPD berhasil diperbarui');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal memperbarui OPD');
+            handleError(error, 'Gagal memperbarui OPD');
         }
     };
 
@@ -96,8 +93,7 @@ export default function OPDPage() {
             toast.success('OPD berhasil dihapus');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menghapus OPD');
+            handleError(error, 'Gagal menghapus OPD');
         }
     };
 

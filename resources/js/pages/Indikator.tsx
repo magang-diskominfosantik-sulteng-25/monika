@@ -13,6 +13,7 @@ import { Label } from '../components/ui/label';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useApi, useMutation } from '../lib/api';
+import { handleError } from '../lib/handle-error';
 
 type IndicatorData = {
     id: number;
@@ -84,25 +85,7 @@ export default function IndikatorPage() {
             toast.success('Indikator berhasil ditambahkan');
             refetch();
         } catch (error: unknown) {
-            const err = error as {
-                response?: {
-                    data?: {
-                        message?: string;
-                        errors?: Record<string, string[]>;
-                    };
-                };
-                message?: string;
-            };
-            console.log('Error detail:', err.response?.data);
-
-            // Show validation errors if available
-            if (err.response?.data?.errors) {
-                const errors = err.response.data.errors;
-                const firstError = Object.values(errors)[0]?.[0];
-                toast.error(firstError || 'Gagal menambahkan indikator');
-            } else {
-                toast.error(err.response?.data?.message || 'Gagal menambahkan indikator');
-            }
+            handleError(error, 'Gagal menambahkan indikator');
         }
     };
 
@@ -139,25 +122,7 @@ export default function IndikatorPage() {
             toast.success('Indikator berhasil diperbarui');
             refetch();
         } catch (error: unknown) {
-            const err = error as {
-                response?: {
-                    data?: {
-                        message?: string;
-                        errors?: Record<string, string[]>;
-                    };
-                };
-                message?: string;
-            };
-            console.log('Error detail:', err.response?.data);
-
-            // Show validation errors if available
-            if (err.response?.data?.errors) {
-                const errors = err.response.data.errors;
-                const firstError = Object.values(errors)[0]?.[0];
-                toast.error(firstError || 'Gagal memperbarui indikator');
-            } else {
-                toast.error(err.response?.data?.message || 'Gagal memperbarui indikator');
-            }
+            handleError(error, 'Gagal memperbarui indikator');
         }
     };
 
@@ -175,8 +140,7 @@ export default function IndikatorPage() {
             toast.success('Indikator berhasil dihapus');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menghapus indikator');
+            handleError(error, 'Gagal menghapus indikator');
         }
     };
 

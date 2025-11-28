@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Select } from '../components/ui/select';
 import { useApi } from '../lib/api';
+import { handleError } from '../lib/handle-error';
 
 type Evidence = {
     id: number;
@@ -94,8 +95,8 @@ export default function LaporanPage() {
             link.click();
             link.remove();
             toast.success(`Laporan ${type} ${format === 'excel' ? 'Excel' : 'PDF'} berhasil diunduh`);
-        } catch {
-            toast.error('Gagal mengekspor laporan');
+        } catch (error: unknown) {
+            handleError(error, 'Gagal mengekspor laporan');
         }
     };
 
@@ -174,7 +175,7 @@ export default function LaporanPage() {
                             ))}
                         </Select>
                     </ToolbarFilter>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Button variant="outline" onClick={() => handleExport('pdf', 'summary')}>
                             <PieChart className="mr-2 h-4 w-4" aria-hidden /> Ekspor Ringkasan OPD
                         </Button>

@@ -23,10 +23,9 @@ class StoreTargetRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:periods,id',
-                Rule::unique('targets', 'indicator_id')->where(function ($query) use ($indicatorId, $opdId, $periodId) {
+                Rule::unique('targets')->where(function ($query) use ($indicatorId, $opdId) {
                     return $query->where('indicator_id', $indicatorId)
-                        ->where('opd_id', $opdId)
-                        ->where('period_id', $periodId);
+                        ->where('opd_id', $opdId);
                 }),
             ],
             'nilai_target_num'  => ['nullable', 'numeric'],

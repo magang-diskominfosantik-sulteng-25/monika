@@ -13,6 +13,7 @@ import { Select } from '../components/ui/select';
 import { Skeleton } from '../components/ui/skeleton';
 import { Textarea } from '../components/ui/textarea';
 import { useApi, useMutation } from '../lib/api';
+import { handleError } from '../lib/handle-error';
 import { IndicatorList } from './OpdIndikator/components/IndicatorList';
 import { OpdInfoCard } from './OpdIndikator/components/OpdInfoCard';
 import { TargetAchievementTable } from './OpdIndikator/components/TargetAchievementTable';
@@ -156,8 +157,7 @@ export default function OpdIndikatorPage() {
             toast.success('Target berhasil ditambahkan');
             refetchTargets();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menambahkan target');
+            handleError(error, 'Gagal menambahkan target');
         }
     };
 
@@ -187,8 +187,7 @@ export default function OpdIndikatorPage() {
             toast.success('Target berhasil diperbarui');
             refetchTargets();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal memperbarui target');
+            handleError(error, 'Gagal memperbarui target');
         }
     };
 
@@ -206,8 +205,7 @@ export default function OpdIndikatorPage() {
             toast.success('Target berhasil dihapus');
             refetchTargets();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menghapus target');
+            handleError(error, 'Gagal menghapus target');
         }
     };
 
@@ -241,8 +239,7 @@ export default function OpdIndikatorPage() {
             toast.success('Capaian berhasil ditambahkan');
             refetchAchievements();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menambahkan capaian');
+            handleError(error, 'Gagal menambahkan capaian');
         }
     };
 
@@ -279,8 +276,7 @@ export default function OpdIndikatorPage() {
             toast.success('Capaian berhasil diperbarui');
             refetchAchievements();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal memperbarui capaian');
+            handleError(error, 'Gagal memperbarui capaian');
         }
     };
 
@@ -298,8 +294,7 @@ export default function OpdIndikatorPage() {
             toast.success('Capaian berhasil dihapus');
             refetchAchievements();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menghapus capaian');
+            handleError(error, 'Gagal menghapus capaian');
         }
     };
 
