@@ -347,8 +347,8 @@ export default function OpdIndikatorPage() {
                     <div className="space-y-6">
                         <OpdInfoCard selectedOpd={selectedOpd} />
 
-                        <div className="grid gap-6 lg:grid-cols-12">
-                            <div className="min-w-0 space-y-4 lg:col-span-4">
+                        <div className="grid gap-6 xl:grid-cols-12">
+                            <div className="min-w-0 space-y-4 xl:col-span-4">
                                 <IndicatorList
                                     opdIndicators={opdIndicators}
                                     selectedIndicatorId={selectedIndicatorId}
@@ -369,7 +369,7 @@ export default function OpdIndikatorPage() {
                                 />
                             </div>
 
-                            <div className="min-w-0 space-y-4 lg:col-span-8">
+                            <div className="min-w-0 space-y-4 xl:col-span-8">
                                 <TargetAchievementTable
                                     isLoadingTargets={isLoadingTargets}
                                     isLoadingAchievements={isLoadingAchievements}
@@ -493,8 +493,7 @@ export default function OpdIndikatorPage() {
                                 disabled={!actionRow?.achievement_id}
                                 onClick={() => {
                                     if (actionRow) {
-                                        const achievementItem =
-                                            opdAchievements.find((a) => a.id === actionRow.achievement_id) ?? null;
+                                        const achievementItem = opdAchievements.find((a) => a.id === actionRow.achievement_id) ?? null;
                                         setEvidenceContext({ achievement: achievementItem, row: actionRow });
                                         setShowEvidenceModal(true);
                                         setShowActionModal(false);
@@ -505,9 +504,7 @@ export default function OpdIndikatorPage() {
                                 Lihat Evidensi
                             </Button>
                             {!actionRow?.achievement_id && (
-                                <p className="text-xs text-slate-500">
-                                    Tambahkan capaian terlebih dahulu sebelum mengunggah evidensi.
-                                </p>
+                                <p className="text-xs text-slate-500">Tambahkan capaian terlebih dahulu sebelum mengunggah evidensi.</p>
                             )}
                         </div>
                     </div>

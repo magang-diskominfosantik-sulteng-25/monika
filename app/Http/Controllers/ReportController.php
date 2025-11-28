@@ -91,32 +91,66 @@ class ReportController extends Controller
     {
         $validated = $request->validate([
             'format' => ['nullable', 'in:excel,pdf'],
+            'type' => ['nullable', 'in:detail,summary'],
         ]);
 
         $dataset = $this->buildSummaryDataset($request);
         $filename = 'achievement-summary-'.now()->format('Ymd_His');
 
+        if ($request->input('type') === 'summary') {
+            $groupedRows = collect($dataset['rows'])->groupBy('opd');
+            $opdSummaries = $groupedRows->map(function ($rows, $opdName) {
+                $avg = $rows->avg('achievement_rate');
+                $total = $rows->count();
+                $filled = $rows->whereNotNull('achievement_rate')->count();
+                $iku = $rows->where('jenis', 'IKU')->count();
+                $ikd = $rows->where('jenis', 'IKD')->count();
+                $ikk = $rows->where('jenis', 'IKK')->count();
+
+                return [
+                    'opd' => $opdName,
+                    'total_indicators' => $total,
+                    'filled_indicators' => $filled,
+                    'iku_count' => $iku,
+                    'ikd_count' => $ikd,
+                    'ikk_count' => $ikk,
+                    'average_achievement' => $avg ?? 0,
+                ];
+            })->values();
+
+            if (($validated['format'] ?? 'excel') === 'pdf') {
+                $pdf = Pdf::loadView('exports.opd_summary', [
+                    'opdSummaries' => $opdSummaries,
+                    'generatedAt' => now(),
+                ])->setPaper('a4', 'portrait');
+
+                return $pdf->download("opd-summary-{$filename}.pdf");
+            }
+
+            return Excel::download(new \App\Exports\OpdSummaryExport($opdSummaries), "opd-summary-{$filename}.xlsx");
+        }
+
+        // Group rows by OPD
+        $groupedRows = collect($dataset['rows'])->groupBy('opd');
+
+        $selectedOpd = null;
+        if ($request->filled('opd') && $request->input('opd') !== 'Semua') {
+            $opd = \App\Models\Opd::where('singkatan', $request->input('opd'))->first();
+            $selectedOpd = $opd ? $opd->nama : $request->input('opd');
+        }
+
         if (($validated['format'] ?? 'excel') === 'pdf') {
             $pdf = Pdf::loadView('exports.achievements', [
-                'dataset'     => $dataset,
+                'groupedRows' => $groupedRows,
+                'selectedOpd' => $selectedOpd,
                 'generatedAt' => now(),
+                'total' => $dataset['counts']['total'],
             ])->setPaper('a4', 'landscape');
 
             return $pdf->download("{$filename}.pdf");
         }
 
-        $rows = collect($dataset['rows'])->map(function (array $row) {
-            return [
-                $row['opd'],
-                $row['indicator'],
-                $row['period'],
-                $row['target'],
-                $row['realisasi'],
-                $row['achievement_rate'],
-            ];
-        });
-
-        return Excel::download(new AchievementSummaryExport($rows), "{$filename}.xlsx");
+        return Excel::download(new AchievementSummaryExport($groupedRows, $selectedOpd), "{$filename}.xlsx");
     }
 
     /**
@@ -202,12 +236,21 @@ class ReportController extends Controller
             });
 
         $rows = $records->map(function (Target $target) {
+            $targetVal = $target->nilai_target_num ?? $target->nilai_target_text;
+            $realisasiVal = $target->achievement?->nilai_realisasi_num ?? $target->achievement?->nilai_realisasi_text;
+
+            $format = function ($v) {
+                return is_numeric($v) ? (float) $v : $v;
+            };
+
             return [
                 'opd' => $target->opd->nama,
                 'indicator' => $target->indicator->nama,
+                'jenis' => $target->indicator->jenis,
+                'satuan' => $target->indicator->satuan,
                 'period' => $target->period->period_key,
-                'target' => $target->nilai_target_num ?? $target->nilai_target_text,
-                'realisasi' => $target->achievement?->nilai_realisasi_num ?? $target->achievement?->nilai_realisasi_text,
+                'target' => $format($targetVal),
+                'realisasi' => $format($realisasiVal),
                 'achievement_rate' => $this->calculateAchievementRate($target),
                 'evidences' => $target->achievement?->evidences->map(function ($evidence) {
                     return [

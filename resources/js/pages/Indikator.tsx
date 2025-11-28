@@ -1,5 +1,5 @@
 import { Edit, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { AppShell } from '../components/AppShell';
@@ -180,6 +180,46 @@ export default function IndikatorPage() {
         }
     };
 
+    const groupedIndicators = useMemo(() => {
+        if (!indikatorList) return {};
+        const groups: Record<string, IndicatorData[]> = {};
+        indikatorList.forEach((item) => {
+            const opdName = item.opd?.nama || 'Tanpa OPD';
+            if (!groups[opdName]) {
+                groups[opdName] = [];
+            }
+            groups[opdName].push(item);
+        });
+        return groups;
+    }, [indikatorList]);
+
+    const columns = [
+        { key: 'nama' as keyof IndicatorData, header: 'Nama', sortable: true },
+        { key: 'jenis' as keyof IndicatorData, header: 'Jenis', sortable: true },
+        { key: 'indicator_type' as keyof IndicatorData, header: 'Tipe Indikator' },
+        { key: 'satuan' as keyof IndicatorData, header: 'Satuan' },
+        { key: 'frequency' as keyof IndicatorData, header: 'Frekuensi' },
+        {
+            key: 'aktif' as keyof IndicatorData,
+            header: 'Status',
+            render: (val: unknown) => <Badge variant={val ? 'success' : 'muted'}>{val ? 'Aktif' : 'Nonaktif'}</Badge>,
+        },
+        {
+            key: 'id' as keyof IndicatorData,
+            header: 'Aksi',
+            render: (_val: unknown, row: IndicatorData) => (
+                <div className="flex gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => handleEdit(row)}>
+                        <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(row)}>
+                        <Trash2 className="h-3 w-3" />
+                    </Button>
+                </div>
+            ),
+        },
+    ];
+
     return (
         <AppShell title="Indikator" description="Kelola IKU/IKD/IKK" active="indikator">
             <div className="space-y-4">
@@ -188,50 +228,25 @@ export default function IndikatorPage() {
                         <Plus className="mr-2 h-4 w-4" /> Tambah Indikator
                     </Button>
                 </ToolbarFilter>
-                <DataTable
-                    columns={[
-                        { key: 'nama', header: 'Nama', sortable: true },
-                        { key: 'jenis', header: 'Jenis', sortable: true },
-                        { key: 'indicator_type', header: 'Tipe Indikator' },
-                        { key: 'satuan', header: 'Satuan' },
-                        { key: 'frequency', header: 'Frekuensi' },
-                        { key: 'version', header: 'Versi' },
-                        {
-                            key: 'aktif',
-                            header: 'Status',
-                            render: (val) => <Badge variant={val ? 'success' : 'muted'}>{val ? 'Aktif' : 'Nonaktif'}</Badge>,
-                        },
-                        {
-                            key: 'id',
-                            header: 'Aksi',
-                            render: (_val, row) => (
-                                <div className="flex gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        onClick={() => {
-                                            const indicator = indikatorList?.find((i) => i.id === row.id);
-                                            if (indicator) handleEdit(indicator);
-                                        }}
-                                    >
-                                        <Edit className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="danger"
-                                        onClick={() => {
-                                            const indicator = indikatorList?.find((i) => i.id === row.id);
-                                            if (indicator) handleDelete(indicator);
-                                        }}
-                                    >
-                                        <Trash2 className="h-3 w-3" />
-                                    </Button>
+                {Object.keys(groupedIndicators).length === 0 ? (
+                    <DataTable columns={columns} data={[]} />
+                ) : (
+                    <div className="space-y-8">
+                        {Object.entries(groupedIndicators)
+                            .sort((a, b) => a[0].localeCompare(b[0]))
+                            .map(([opdName, items]) => (
+                                <div key={opdName} className="space-y-3">
+                                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                                        <h3 className="text-lg font-semibold text-slate-800">{opdName}</h3>
+                                        <Badge variant="muted" className="ml-2">
+                                            {items.length}
+                                        </Badge>
+                                    </div>
+                                    <DataTable columns={columns} data={items} />
                                 </div>
-                            ),
-                        },
-                    ]}
-                    data={indikatorList || []}
-                />
+                            ))}
+                    </div>
+                )}
             </div>
 
             {/* Create Modal */}
