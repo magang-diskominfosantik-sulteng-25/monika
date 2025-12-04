@@ -1,5 +1,5 @@
 import { Building2, Download, ExternalLink, Eye, File, FileText, PieChart } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import axios from 'axios';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Select } from '../components/ui/select';
 import { useApi } from '../lib/api';
+import { handleError } from '../lib/handle-error';
 
 type Evidence = {
     id: number;
@@ -23,6 +24,7 @@ type ReportData = {
     opd: string;
     indicator: string;
     period: string;
+    satuan: string | null;
     target: number | string;
     realisasi: number | string;
     achievement_rate: number | null;
@@ -52,6 +54,15 @@ export default function LaporanPage() {
 
     const { data: options } = useApi<ReportOptions>('/reports/options');
 
+    useEffect(() => {
+        if (options?.years && options.years.length > 0) {
+            const currentYear = Number(filters.tahun);
+            if (!options.years.includes(currentYear)) {
+                setFilters((prev) => ({ ...prev, tahun: String(options.years[0]) }));
+            }
+        }
+    }, [options, filters.tahun]);
+
     // Construct query string for filters
     const queryString = new URLSearchParams(
         Object.entries(filters).reduce(
@@ -70,22 +81,22 @@ export default function LaporanPage() {
     const counts = summaryData?.counts || { total: 0 };
     const byType = summaryData?.by_indicator_type || {};
 
-    const handleExport = async (format: 'excel' | 'pdf') => {
+    const handleExport = async (format: 'excel' | 'pdf', type: 'detail' | 'summary' = 'detail') => {
         try {
             const response = await axios.get(`/api/v1/reports/export`, {
-                params: { format, ...filters },
+                params: { format, type, ...filters },
                 responseType: 'blob',
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `laporan.${format === 'excel' ? 'xlsx' : 'pdf'}`);
+            link.setAttribute('download', `laporan-${type}.${format === 'excel' ? 'xlsx' : 'pdf'}`);
             document.body.appendChild(link);
             link.click();
             link.remove();
-            toast.success(`Laporan ${format === 'excel' ? 'Excel' : 'PDF'} berhasil diunduh`);
-        } catch {
-            toast.error('Gagal mengekspor laporan');
+            toast.success(`Laporan ${type} ${format === 'excel' ? 'Excel' : 'PDF'} berhasil diunduh`);
+        } catch (error: unknown) {
+            handleError(error, 'Gagal mengekspor laporan');
         }
     };
 
@@ -164,7 +175,10 @@ export default function LaporanPage() {
                             ))}
                         </Select>
                     </ToolbarFilter>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={() => handleExport('pdf', 'summary')}>
+                            <PieChart className="mr-2 h-4 w-4" aria-hidden /> Ekspor Ringkasan OPD
+                        </Button>
                         <Button variant="secondary" onClick={() => handleExport('excel')}>
                             <Download className="mr-2 h-4 w-4" aria-hidden /> Ekspor Excel
                         </Button>
@@ -179,6 +193,7 @@ export default function LaporanPage() {
                         { key: 'indicator', header: 'Indikator', sortable: true },
                         { key: 'opd', header: 'OPD', sortable: true },
                         { key: 'period', header: 'Periode' },
+                        { key: 'satuan', header: 'Satuan', render: (val) => (val as string) || '-' },
                         { key: 'target', header: 'Target' },
                         { key: 'realisasi', header: 'Realisasi' },
                         {

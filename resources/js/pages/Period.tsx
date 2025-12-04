@@ -12,6 +12,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select } from '../components/ui/select';
 import { useApi, useMutation } from '../lib/api';
+import { handleError } from '../lib/handle-error';
 
 type PeriodData = {
     id: number;
@@ -76,8 +77,7 @@ export default function PeriodPage() {
             toast.success('Periode berhasil ditambahkan');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menambahkan periode');
+            handleError(error, 'Gagal menambahkan periode');
         }
     };
 
@@ -108,8 +108,7 @@ export default function PeriodPage() {
             toast.success('Periode berhasil diperbarui');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal memperbarui periode');
+            handleError(error, 'Gagal memperbarui periode');
         }
     };
 
@@ -127,8 +126,7 @@ export default function PeriodPage() {
             toast.success('Periode berhasil dihapus');
             refetch();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } }; message?: string };
-            toast.error(err.response?.data?.message || 'Gagal menghapus periode');
+            handleError(error, 'Gagal menghapus periode');
         }
     };
 

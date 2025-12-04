@@ -2,31 +2,26 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Contracts\View\View;
+use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
-class AchievementSummaryExport implements FromCollection, WithHeadings, ShouldAutoSize
+class AchievementSummaryExport implements FromView, ShouldAutoSize
 {
-    public function __construct(private readonly Collection $rows)
-    {
+    public function __construct(
+        private readonly Collection $groupedRows,
+        private readonly ?string $selectedOpd
+    ) {
     }
 
-    public function collection(): Collection
+    public function view(): View
     {
-        return $this->rows;
-    }
-
-    public function headings(): array
-    {
-        return [
-            'Organisasi Perangkat Daerah (OPD)',
-            'Indikator',
-            'Periode',
-            'Target',
-            'Realisasi',
-            'Tingkat Capaian (%)',
-        ];
+        return view('exports.achievements', [
+            'groupedRows' => $this->groupedRows,
+            'selectedOpd' => $this->selectedOpd,
+            'generatedAt' => now(),
+            'total' => $this->groupedRows->flatten(1)->count(),
+        ]);
     }
 }
