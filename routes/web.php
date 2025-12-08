@@ -55,10 +55,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // Evidences
-    Route::get('/achievements/{achievement}/evidences', [EvidenceController::class, 'index'])->name('evidences.index');
-    Route::post('/achievements/{achievement}/evidences', [EvidenceController::class, 'store'])->name('evidences.store');
-    Route::delete('/evidences/{evidence}', [EvidenceController::class, 'destroy'])->name('evidences.destroy');
-    Route::get('/evidences/{evidence}/download', [EvidenceController::class, 'download'])->name('evidences.download');
+    // Route::get('/achievements/{achievement}/evidences', [EvidenceController::class, 'index'])->name('evidences.index');
+    // Route::post('/achievements/{achievement}/evidences', [EvidenceController::class, 'store'])->name('evidences.store');
+    // Route::delete('/evidences/{evidence}', [EvidenceController::class, 'destroy'])->name('evidences.destroy');
+    // Route::get('/evidences/{evidence}/download', [EvidenceController::class, 'download'])->name('evidences.download');
     Route::get('/evidences/{evidence}/preview', [EvidenceController::class, 'preview'])->name('evidences.preview');
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
